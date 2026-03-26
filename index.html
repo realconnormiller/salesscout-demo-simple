@@ -138,21 +138,21 @@ body {
 .lock-overlay .lock-time {
   position: relative; z-index: 2;
   font-size: 72px; font-weight: 300; letter-spacing: -2px;
-  color: #1a1a1a; opacity: 0;
+  color: #1a1a1a; opacity: 0; transition: opacity 300ms ease;
 }
 .lock-overlay .lock-time.visible { opacity: 1; }
 .lock-overlay .lock-date {
   position: relative; z-index: 2;
   font-size: 16px; font-weight: 400;
-  color: rgba(0,0,0,0.5); margin-top: 4px; opacity: 0;
+  color: rgba(0,0,0,0.5); margin-top: 4px; opacity: 0; transition: opacity 300ms ease;
 }
 .lock-overlay .lock-date.visible { opacity: 1; }
 
-/* Lock notification — drops from top on white background */
+/* Lock notification — centered card replacing clock */
 .lock-notif {
   position: absolute;
-  top: 70px; left: 50%;
-  transform: translateX(-50%) translateY(-200%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
   width: 85%;
   background: rgba(235,240,245,0.95);
   -webkit-backdrop-filter: blur(20px);
@@ -162,19 +162,20 @@ body {
   padding: 12px 16px;
   box-shadow: rgba(0,0,0,0.12) 0px 8px 32px;
   z-index: 45;
-  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
 }
-.lock-notif.show { transform: translateX(-50%) translateY(0); }
+.lock-notif.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .lock-notif.tap { animation: notifTap 250ms ease forwards; }
 .lock-notif.dismiss {
-  transform: translateX(-50%) translateY(-200%);
-  transition: transform 300ms ease-in;
+  opacity: 0; transform: translate(-50%, -50%) scale(0.98);
+  transition: opacity 300ms ease, transform 300ms ease;
 }
 @keyframes notifTap {
-  0%   { transform: translateX(-50%) scale(1); }
-  32%  { transform: translateX(-50%) scale(0.97); }
-  72%  { transform: translateX(-50%) scale(1.02); }
-  100% { transform: translateX(-50%) scale(1); }
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  32%  { transform: translate(-50%, -50%) scale(0.97); }
+  72%  { transform: translate(-50%, -50%) scale(1.02); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 .lock-notif .ln-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .lock-notif .ln-icon {
@@ -889,7 +890,10 @@ async function playSevenAm() {
   lockDate.classList.add('visible');
   await sleep(1200);
 
-  // Step 5: Notification drops from top with spring
+  // Step 5: Clock fades out, notification replaces it in center
+  lockTime.classList.remove('visible');
+  lockDate.classList.remove('visible');
+  await sleep(300);
   lockNotif.classList.add('show');
   await sleep(3000);
 
