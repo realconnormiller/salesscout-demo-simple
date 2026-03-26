@@ -52,7 +52,7 @@ body {
   transform: translate(-50%, -50%);
   width: 600px;
   height: 600px;
-  background: radial-gradient(ellipse, rgba(26,111,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(26,111,255,0.17) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -64,7 +64,7 @@ body {
   position: relative;
   z-index: 2;
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   transition: opacity 600ms ease;
 }
 .wordmark.hidden { opacity: 0; }
@@ -446,8 +446,8 @@ body {
   background-clip: text;
   margin-top: 8px;
 }
-.cl-sub { color: #999999; font-size: 18px; font-weight: 400; margin-top: 24px; }
-.cl-logo { font-size: 22px; font-weight: 600; margin-top: 20px; }
+.cl-sub { color: #999999; font-size: 18px; font-weight: 400; margin-top: 24px; max-width: 480px; text-align: center; }
+.cl-logo { font-size: 22px; font-weight: 600; margin-top: 24px; }
 .cl-logo .blue { color: var(--color-blue-light); }
 .cl-cta {
   display: inline-block; margin-top: 32px; padding: 14px 36px;
@@ -585,7 +585,7 @@ body {
 <div id="closingOverlay">
   <div class="cl-line1">Stop prospecting.</div>
   <div class="cl-line2">Start closing.</div>
-  <div class="cl-sub">SalesScout runs overnight. You close in the morning.</div>
+  <div class="cl-sub">Right now, someone is calling your best prospects before you do.</div>
   <div class="cl-logo">Sales<span class="blue">Scout</span></div>
   <button class="cl-cta">Get Early Access</button>
 </div>
@@ -615,12 +615,12 @@ const CONFIG = {
     checkmarkGap:         200,   // gap between progress checkmark swaps
     checkmarkPause:       400,   // pause after checkmarks before responses
     decisionPause:       2000,   // extra pause after PURSUE NOW
-    outreachPause:       2500,   // extra pause after outreach draft
-    vibrantHealthPause:  4000,   // extra pause after long Vibrant Health bubble
+    outreachPause:       6000,   // extra pause after outreach draft — viewer reads
+    vibrantHealthPause:  5500,   // extra pause after Vibrant Health data bubble
     pipelineBubbleGap:   1500,   // gap for pipeline response bubbles
     longBubbleExtra:      800,   // extra ms for bubbles >20 words
-    notificationHold:    3000,   // 7AM lock screen notification hold
-    sevenAmBubbleGap:    1500,   // gap between overnight research bubbles
+    notificationHold:    4000,   // 7AM lock screen notification hold
+    sevenAmBubbleGap:    1800,   // gap between overnight research bubbles
     silenceAfterBriefs:  4000,   // silence after "Ready to brief" before fade
     preSevenAmPause:     2000,   // pause before 7AM sequence starts
     screenDimFade:        800,   // screen dim fade duration (CSS)
@@ -712,7 +712,7 @@ const CONFIG = {
   closing: {
     line1: 'Stop prospecting.',
     line2: 'Start closing.',
-    sub: 'SalesScout runs overnight. You close in the morning.',
+    sub: 'Right now, someone is calling your best prospects before you do.',
     cta: 'Get Early Access',
   },
 };
@@ -779,10 +779,18 @@ function addReadReceipt() {
   return div;
 }
 
+// FIX 9 — Typing dots with organic randomness
 function showTyping() {
   const div = document.createElement('div');
   div.className = 'typing';
-  div.innerHTML = '<span></span><span></span><span></span>';
+  const d1 = document.createElement('span');
+  const d2 = document.createElement('span');
+  const d3 = document.createElement('span');
+  d2.style.animationDelay = (0.18 + Math.random() * 0.04).toFixed(3) + 's';
+  d3.style.animationDelay = (0.36 + Math.random() * 0.04).toFixed(3) + 's';
+  div.appendChild(d1);
+  div.appendChild(d2);
+  div.appendChild(d3);
   msgBox.appendChild(div);
   requestAnimationFrame(() => { div.classList.add('show'); scroll(); });
   return div;
@@ -886,7 +894,7 @@ async function playScene(scene) {
   }
 }
 
-// 7AM CLIMAX SEQUENCE — rebuilt from scratch
+// 7AM CLIMAX SEQUENCE — FIX 1 + FIX 2 + FIX 7
 async function playSevenAm() {
   const t = CONFIG.timing;
   const sa = CONFIG.sevenAm;
@@ -894,47 +902,57 @@ async function playSevenAm() {
   // Step 1: Pause after pipeline
   await sleep(t.preSevenAmPause);
 
-  // Step 2: Phone screen fades to black — lock screen takes over
+  // Step 2: Phone screen fades to black (1000ms)
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
   lockNotif.classList.remove('show', 'tap');
-  lockOverlay.classList.add('show');  // opacity 0→1, 1000ms
+  lockOverlay.classList.add('show');
   await sleep(1000);
 
-  // Step 3: Large clock + date fade in on dark screen
+  // FIX 2: Black screen holds 1500ms
+  await sleep(1500);
+
+  // Step 3: Clock + date fade in (600ms)
   lockTime.classList.add('visible');
   lockDate.classList.add('visible');
   await sleep(600);
 
-  // Step 4: Pause on lock screen
-  await sleep(1000);
+  // FIX 2: Clock holds 2000ms
+  await sleep(2000);
 
-  // Step 5: Notification drops with spring animation
+  // Step 5: Notification drops — holds 4000ms
   lockNotif.classList.add('show');
-  await sleep(t.notificationHold);  // 3000ms hold (using notificationHold but we override below)
+  await sleep(t.notificationHold);
 
-  // Step 6: Tap animation
+  // Step 6: Tap animation 250ms
   lockNotif.classList.add('tap');
   await sleep(250);
 
-  // Step 7: Lock screen fades out, chat fades back in
-  // First, pre-render overnight bubbles into chat while lock screen is still up
-  for (const text of sa.bubbles) {
-    addBubble('assistant', text, '', true);  // preloaded = already visible
-  }
-  scroll();
+  // FIX 7: Update status bar clock BEFORE lock screen fades
+  sbTime.textContent = '7:00';
 
-  // Now fade lock screen away — chat with overnight messages revealed
+  // Step 7: Lock screen fades out (400ms) — reveals chat
   lockOverlay.classList.remove('show');
   await sleep(400);
 
-  // Update status bar clock
-  sbTime.textContent = '7:00';
+  // FIX 1: Overnight bubbles animate in SEQUENTIALLY
+  // 500ms pause after fade
+  await sleep(500);
 
-  // Step 9: Silence — the feature. 4 seconds of nothing.
+  // Add "Today 7:00 AM" timestamp
+  addTimestamp('Today 7:00 AM');
+  await sleep(500);
+
+  // Animate each bubble in one by one with 1800ms gaps
+  for (const text of sa.bubbles) {
+    addBubble('assistant', text);  // NOT preloaded — animates in
+    await sleep(t.sevenAmBubbleGap);
+  }
+
+  // Step 9: 4000ms silence — the feature
   await sleep(t.silenceAfterBriefs);
 
-  // Step 10: Fade phone out
+  // Step 10: Fade phone out 800ms
   phoneWrap.classList.add('fade-out');
   wordmark.classList.add('hidden');
   controls.classList.add('hidden');
