@@ -164,29 +164,39 @@ body {
   transition: opacity 600ms ease;
 }
 .lock-overlay .lock-date.visible { opacity: 1; }
-/* Lock screen notification — positioned near top */
+/* Lock screen notification — centered card (iOS style) */
 .lock-notif {
   position: absolute;
-  top: 70px;
-  left: 16px;
-  right: 16px;
-  background: rgba(30,30,30,0.9);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.08);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 85%;
+  background: rgba(30,30,30,0.95);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px;
-  padding: 12px 16px;
-  transform: translateY(-200%);
-  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 16px;
+  box-shadow: rgba(0,0,0,0.5) 0px 20px 60px;
   z-index: 45;
+  opacity: 0;
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
 }
-.lock-notif.show { transform: translateY(0); }
+.lock-notif.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
 .lock-notif.tap { animation: notifTap 250ms ease forwards; }
+.lock-notif.dismiss {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.98);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
 @keyframes notifTap {
-  0%   { transform: translateY(0) scale(1); }
-  32%  { transform: translateY(0) scale(0.97); }
-  72%  { transform: translateY(0) scale(1.02); }
-  100% { transform: translateY(0) scale(1); }
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  32%  { transform: translate(-50%, -50%) scale(0.97); }
+  72%  { transform: translate(-50%, -50%) scale(1.02); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 .lock-notif .ln-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .lock-notif .ln-icon {
@@ -197,7 +207,7 @@ body {
 }
 .lock-notif .ln-app { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); }
 .lock-notif .ln-time { font-size: 12px; color: rgba(255,255,255,0.35); margin-left: auto; }
-.lock-notif .ln-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+.lock-notif .ln-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 2px; }
 .lock-notif .ln-body { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.35; }
 
 .dynamic-island {
@@ -614,15 +624,15 @@ const CONFIG = {
     readReceiptDelay:     800,   // delay before "Read" shows
     checkmarkGap:         200,   // gap between progress checkmark swaps
     checkmarkPause:       400,   // pause after checkmarks before responses
-    decisionPause:       2000,   // extra pause after PURSUE NOW
-    outreachPause:       6000,   // extra pause after outreach draft — viewer reads
-    vibrantHealthPause:  5500,   // extra pause after Vibrant Health data bubble
+    decisionPause:       1200,   // extra pause after PURSUE NOW (FIX 2)
+    outreachPause:       8000,   // extra pause after outreach draft (FIX 3)
+    vibrantHealthPause:  3000,   // extra pause after Vibrant Health data bubble (FIX 2)
     pipelineBubbleGap:   1500,   // gap for pipeline response bubbles
     longBubbleExtra:      800,   // extra ms for bubbles >20 words
     notificationHold:    4000,   // 7AM lock screen notification hold
     sevenAmBubbleGap:    1800,   // gap between overnight research bubbles
-    silenceAfterBriefs:  4000,   // silence after "Ready to brief" before fade
-    preSevenAmPause:     2000,   // pause before 7AM sequence starts
+    silenceAfterBriefs:  2000,   // silence after "Ready to brief" before fade (FIX 7)
+    preSevenAmPause:      500,   // pause before 7AM sequence starts (FIX 5)
     screenDimFade:        800,   // screen dim fade duration (CSS)
     clockFade:            600,   // clock text swap fade
     screenUndim:          400,   // screen undim duration
@@ -669,10 +679,11 @@ const CONFIG = {
       ],
     },
 
-    // SCENE 3 — Prospect Discovery
+    // SCENE 3 — Prospect Discovery (FIX 4: tighter bubble gap)
     {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
+      responseGap: 800,
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -824,6 +835,8 @@ async function typeUserMessage(text) {
     div.classList.add('show');
     scroll();
   }));
+  // FIX 9: 50ms delay before first character to prevent flash
+  await sleep(50);
   const totalTime = Math.min(text.length * t.userTypingSpeed, t.userTypingCap);
   const perChar = totalTime / text.length;
   for (let i = 0; i < text.length; i++) {
@@ -899,9 +912,6 @@ async function playSevenAm() {
   const t = CONFIG.timing;
   const sa = CONFIG.sevenAm;
 
-  // Step 1: Pause after pipeline
-  await sleep(t.preSevenAmPause);
-
   // Step 2: Phone screen fades to black (1000ms)
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
@@ -909,8 +919,8 @@ async function playSevenAm() {
   lockOverlay.classList.add('show');
   await sleep(1000);
 
-  // FIX 2: Black screen holds 1500ms
-  await sleep(1500);
+  // Black screen holds 1000ms (FIX 6: keep total under 10s)
+  await sleep(1000);
 
   // Step 3: Clock + date fade in (600ms)
   lockTime.classList.add('visible');
@@ -927,6 +937,11 @@ async function playSevenAm() {
   // Step 6: Tap animation 250ms
   lockNotif.classList.add('tap');
   await sleep(250);
+
+  // Dismiss notification with scale-down fade
+  lockNotif.classList.remove('show');
+  lockNotif.classList.add('dismiss');
+  await sleep(300);
 
   // FIX 7: Update status bar clock BEFORE lock screen fades
   sbTime.textContent = '7:00';
@@ -959,14 +974,18 @@ async function playSevenAm() {
   await sleep(t.phoneFadeOut);
 }
 
-// CLOSING CARD — fade in, hold, then show replay
+// CLOSING CARD — fade in, show replay immediately (FIX 8)
 async function playClosing() {
   const t = CONFIG.timing;
   closingOv.classList.add('show');
-  await sleep(t.closingHold);
 
-  // Show replay controls over closing card
+  // FIX 8: Enable replay immediately so viewer can restart during hold
+  running = false;
+  startBtn.disabled = false;
+  replayBtn.disabled = false;
   controls.classList.remove('hidden');
+
+  await sleep(t.closingHold);
 }
 
 function loadPreloaded() {
@@ -989,7 +1008,7 @@ function resetAll() {
   lockOverlay.classList.remove('show');
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
-  lockNotif.classList.remove('show', 'tap');
+  lockNotif.classList.remove('show', 'tap', 'dismiss');
   sbTime.textContent = '9:41';
   sbTime.style.opacity = '1';
 }
@@ -1010,10 +1029,11 @@ async function runDemo() {
   loadPreloaded();
   await sleep(800);
 
-  // Play scenes 1-4
-  for (const scene of CONFIG.scenes) {
-    await playScene(scene);
-    await sleep(CONFIG.timing.sceneGap);
+  // Play scenes 1-4 (FIX 5: last scene gets shorter gap before 7AM)
+  for (let i = 0; i < CONFIG.scenes.length; i++) {
+    await playScene(CONFIG.scenes[i]);
+    const isLastScene = (i === CONFIG.scenes.length - 1);
+    await sleep(isLastScene ? CONFIG.timing.preSevenAmPause : CONFIG.timing.sceneGap);
   }
 
   // 7AM climax sequence
