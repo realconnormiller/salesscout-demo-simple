@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* =============================================================
-   DESIGN TOKENS — edit colors and timing here
+   DESIGN TOKENS
    ============================================================= */
 :root {
   --color-bg:               #000000;
@@ -23,25 +23,13 @@
   --color-text-primary:     #ffffff;
   --color-text-secondary:   #999999;
   --color-text-muted:       #666666;
-  --timing-progress-gap:    800ms;
-  --timing-bubble-gap:      1000ms;
-  --timing-scene-gap:       1500ms;
-  --timing-typing-min:      1200ms;
 }
 
 /* =============================================================
    RESET + BASE
    ============================================================= */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-}
-
+html, body { margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; }
 body {
   background: var(--color-bg);
   font-family: 'Inter', -apple-system, sans-serif;
@@ -55,31 +43,40 @@ body {
 }
 
 /* =============================================================
-   CANVAS VIGNETTE — radial behind phone only
+   FIX 4 — Blue glow behind phone
    ============================================================= */
-.vignette {
+.phone-glow {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 600px;
-  height: 1000px;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 30%, rgba(0,0,0,0.4) 100%);
+  height: 600px;
+  background: radial-gradient(ellipse, rgba(26,111,255,0.1) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
 
 /* =============================================================
-   WORDMARK — above phone
+   WORDMARK + CONTEXT LINE
    ============================================================= */
 .wordmark {
   position: relative;
   z-index: 2;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   transition: opacity 600ms ease;
 }
 .wordmark.hidden { opacity: 0; }
+.wordmark-context {
+  font-size: 13px;
+  font-weight: 400;
+  color: #555555;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  transition: opacity 600ms ease;
+}
+.wordmark-context.hidden { opacity: 0; }
 .wordmark-title {
   font-size: 24px;
   font-weight: 600;
@@ -101,7 +98,7 @@ body {
   z-index: 1;
   transform: scale(0.85);
   transform-origin: center center;
-  transition: opacity 600ms ease;
+  transition: opacity 800ms ease;
 }
 .phone-wrap.fade-out { opacity: 0; }
 
@@ -112,27 +109,16 @@ body {
   background: var(--color-frame);
   border-radius: 54px;
   padding: 12px;
-  box-shadow:
-    0 0 0 1px rgba(26,111,255,0.15),
-    0 40px 80px rgba(0,0,0,0.7);
+  box-shadow: 0 0 0 1px rgba(26,111,255,0.15), 0 40px 80px rgba(0,0,0,0.7);
 }
 
-/* Side buttons — CSS only */
-.side-btn {
-  position: absolute;
-  background: #2a2a2a;
-  border-radius: 2px;
-}
-/* Left side: mute switch */
-.side-btn.mute   { left: -3px; top: 160px; width: 3px; height: 28px; }
-/* Left side: volume up */
-.side-btn.vol-up { left: -3px; top: 210px; width: 3px; height: 52px; }
-/* Left side: volume down */
-.side-btn.vol-dn { left: -3px; top: 272px; width: 3px; height: 52px; }
-/* Right side: power */
-.side-btn.power  { right: -3px; top: 230px; width: 3px; height: 80px; }
+/* FIX 5 — Side buttons */
+.side-btn { position: absolute; background: #2a2a2a; border-radius: 2px; }
+.side-btn.mute   { left: -3px; top: 155px; width: 3px; height: 32px; }
+.side-btn.vol-up { left: -3px; top: 205px; width: 3px; height: 56px; }
+.side-btn.vol-dn { left: -3px; top: 271px; width: 3px; height: 56px; }
+.side-btn.power  { right: -3px; top: 225px; width: 3px; height: 72px; }
 
-/* Inner screen */
 .screen {
   position: relative;
   width: 100%;
@@ -144,7 +130,19 @@ body {
   flex-direction: column;
 }
 
-/* Dynamic Island */
+/* Screen dim overlay for 7AM sequence */
+.screen-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 800ms ease;
+  border-radius: 44px;
+}
+.screen-dim.show { opacity: 1; }
+
 .dynamic-island {
   position: absolute;
   top: 11px;
@@ -157,7 +155,6 @@ body {
   z-index: 10;
 }
 
-/* Status bar */
 .status-bar {
   position: relative;
   z-index: 5;
@@ -172,12 +169,9 @@ body {
   font-size: 15px;
   font-weight: 600;
   color: #fff;
+  transition: opacity 300ms ease;
 }
-.status-bar .sb-icons {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
+.status-bar .sb-icons { display: flex; align-items: center; gap: 5px; }
 .status-bar .sb-icons svg { width: 16px; height: 16px; fill: #fff; }
 
 /* =============================================================
@@ -191,41 +185,16 @@ body {
   flex-shrink: 0;
   gap: 10px;
 }
-.imsg-back {
-  font-size: 28px;
-  color: var(--color-blue);
-  font-weight: 300;
-  line-height: 1;
-  margin-right: 2px;
-}
-.imsg-badge {
-  font-size: 16px;
-  color: var(--color-blue);
-  font-weight: 500;
-}
+.imsg-back { font-size: 28px; color: var(--color-blue); font-weight: 300; line-height: 1; margin-right: 2px; }
+.imsg-badge { font-size: 16px; color: var(--color-blue); font-weight: 500; }
 .imsg-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background: linear-gradient(135deg, var(--color-blue), var(--color-blue-light));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #fff; flex-shrink: 0;
 }
-.imsg-name {
-  font-size: 17px;
-  font-weight: 600;
-  color: #fff;
-  flex: 1;
-}
-.imsg-video {
-  flex-shrink: 0;
-  opacity: 0.5;
-}
+.imsg-name { font-size: 17px; font-weight: 600; color: #fff; flex: 1; }
+.imsg-video { flex-shrink: 0; opacity: 1; }
 .imsg-video svg { width: 24px; height: 24px; fill: var(--color-blue); }
 
 /* =============================================================
@@ -242,15 +211,12 @@ body {
 }
 .messages::-webkit-scrollbar { width: 0; }
 
-/* Timestamp gap */
 .timestamp {
   text-align: center;
   font-size: 11px;
   color: var(--color-text-muted);
   padding: 8px 0 4px;
 }
-
-/* Read receipt */
 .read-receipt {
   text-align: right;
   font-size: 11px;
@@ -273,16 +239,9 @@ body {
   transform: translateY(8px);
   font-weight: 400;
 }
-.msg.preloaded {
-  opacity: 1;
-  transform: none;
-}
-.msg.show {
-  opacity: 1;
-  transform: translateY(0);
-}
+.msg.preloaded { opacity: 1; transform: none; }
+.msg.show { opacity: 1; transform: translateY(0); }
 
-/* User bubbles — right aligned, iMessage blue */
 .msg.user {
   align-self: flex-end;
   background: var(--color-bubble-user);
@@ -291,26 +250,17 @@ body {
   transform: translateX(20px);
 }
 .msg.user.preloaded { transform: none; }
-.msg.user.show {
-  animation: slideInRight 200ms ease-out forwards;
-}
+.msg.user.show { animation: slideInRight 200ms ease-out forwards; }
 
-/* Assistant bubbles — left aligned, dark grey */
 .msg.assistant {
   align-self: flex-start;
   background: var(--color-bubble-assistant);
   color: #fff;
   border-radius: 18px 18px 18px 4px;
 }
-.msg.assistant.show {
-  animation: fadeSlideUp 300ms ease-out forwards;
-}
-.msg.assistant.preloaded {
-  opacity: 1;
-  transform: none;
-}
+.msg.assistant.show { animation: fadeSlideUp 300ms ease-out forwards; }
+.msg.assistant.preloaded { opacity: 1; transform: none; }
 
-/* Progress bubbles */
 .msg.progress {
   align-self: flex-start;
   background: var(--color-bubble-progress);
@@ -321,28 +271,19 @@ body {
   padding: 8px 12px;
 }
 .msg.progress .spinner {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid #333;
-  border-top-color: var(--color-blue-light);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
+  display: inline-block; width: 10px; height: 10px;
+  border: 1.5px solid #333; border-top-color: var(--color-blue-light);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+  margin-right: 6px; vertical-align: middle;
 }
 .msg.progress .checkmark {
-  display: none;
-  color: var(--color-blue-light);
-  font-size: 13px;
-  margin-right: 6px;
-  vertical-align: middle;
+  display: none; color: var(--color-blue-light);
+  font-size: 13px; margin-right: 6px; vertical-align: middle;
 }
 .msg.progress.checked .spinner { display: none; }
 .msg.progress.checked .checkmark { display: inline; }
 .msg.progress.checked { color: var(--color-text-secondary); }
 
-/* Decision bubbles — full width, blue accent */
 .msg.decision {
   align-self: flex-start;
   max-width: 92%;
@@ -356,11 +297,9 @@ body {
   box-shadow: rgba(26,111,255,0.2) -4px 0px 16px;
 }
 
-/* Typing indicator */
 .typing {
   align-self: flex-start;
-  display: flex;
-  gap: 4px;
+  display: flex; gap: 4px;
   padding: 12px 16px;
   background: var(--color-bubble-assistant);
   border-radius: 18px 18px 18px 4px;
@@ -368,73 +307,45 @@ body {
 }
 .typing.show { opacity: 1; }
 .typing span {
-  width: 7px;
-  height: 7px;
-  background: #555;
-  border-radius: 50%;
-  animation: pulse 1.2s ease-in-out infinite;
+  width: 7px; height: 7px; background: #555;
+  border-radius: 50%; animation: pulse 1.2s ease-in-out infinite;
 }
 .typing span:nth-child(2) { animation-delay: 0.15s; }
 .typing span:nth-child(3) { animation-delay: 0.3s; }
 
 /* =============================================================
-   iMESSAGE INPUT BAR
+   iMESSAGE INPUT
    ============================================================= */
 .imsg-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px 28px;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px 28px; flex-shrink: 0;
 }
 .imsg-plus {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 50%; background: #333;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .imsg-plus svg { width: 16px; height: 16px; fill: #fff; }
 .imsg-field {
-  flex: 1;
-  background: transparent;
-  border: 1px solid #3a3a3c;
-  border-radius: 20px;
-  padding: 8px 14px;
-  font-size: 15px;
-  color: #8e8e93;
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex: 1; background: transparent; border: 1px solid #3a3a3c;
+  border-radius: 20px; padding: 8px 14px; font-size: 15px;
+  color: #8e8e93; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: space-between;
 }
 .imsg-mic { flex-shrink: 0; opacity: 0.4; }
 .imsg-mic svg { width: 18px; height: 18px; fill: #8e8e93; }
 
-/* Home indicator */
 .home-indicator {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 134px;
-  height: 5px;
-  background: rgba(255,255,255,0.4);
-  border-radius: 3px;
-  z-index: 5;
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  width: 134px; height: 5px; background: rgba(255,255,255,0.4);
+  border-radius: 3px; z-index: 5;
 }
 
 /* =============================================================
-   NOTIFICATION BANNER
+   NOTIFICATION BANNER (inside phone screen)
    ============================================================= */
 .notif-banner {
   position: absolute;
-  top: 54px;
-  left: 12px;
-  right: 12px;
+  top: 54px; left: 12px; right: 12px;
   z-index: 50;
   background: rgba(20,20,20,0.9);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -446,24 +357,12 @@ body {
   transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .notif-banner.show { transform: translateY(0); }
-.notif-banner .nb-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
+.notif-banner .nb-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .notif-banner .nb-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 36px; height: 36px; border-radius: 8px;
   background: linear-gradient(135deg, var(--color-blue), var(--color-blue-light));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #fff; flex-shrink: 0;
 }
 .notif-banner .nb-app { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); }
 .notif-banner .nb-time { font-size: 12px; color: rgba(255,255,255,0.35); margin-left: auto; }
@@ -471,60 +370,34 @@ body {
 .notif-banner .nb-body { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.35; }
 
 /* =============================================================
-   CLOSING OVERLAY
+   CLOSING OVERLAY — FIX 2
    ============================================================= */
 #closingOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: #000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  opacity: 0;
-  pointer-events: none;
+  position: fixed; inset: 0; z-index: 100;
+  background: radial-gradient(ellipse at center, rgba(26,111,255,0.06) 0%, transparent 60%), #000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0; opacity: 0; pointer-events: none;
   transition: opacity 600ms ease;
 }
 #closingOverlay.show { opacity: 1; pointer-events: auto; }
-.cl-line1 {
-  font-size: 52px;
-  font-weight: 600;
-  color: #fff;
-  letter-spacing: -0.92px;
-}
+.cl-line1 { font-size: 52px; font-weight: 600; color: #fff; letter-spacing: -0.92px; }
 .cl-line2 {
-  font-size: 52px;
-  font-weight: 600;
-  letter-spacing: -0.92px;
-  background: linear-gradient(90deg, #1a6fff, #4db8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 52px; font-weight: 600; letter-spacing: -0.92px;
+  background: linear-gradient(135deg, #1a6fff, #4db8ff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-.cl-sub {
-  color: var(--color-text-secondary);
-  font-size: 18px;
-  font-weight: 400;
-  margin-top: 20px;
-}
+.cl-sub { color: #999999; font-size: 18px; font-weight: 400; margin-top: 24px; }
+.cl-logo { font-size: 22px; font-weight: 600; margin-top: 20px; }
+.cl-logo .blue { color: var(--color-blue-light); }
 .cl-cta {
-  display: inline-block;
-  margin-top: 32px;
-  padding: 14px 36px;
-  background: var(--color-blue);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  box-shadow:
-    rgba(26,111,255,0.2) 0px 6px 28px -1px,
-    rgba(0,0,0,0.09) 0px 4px 9px 0px,
-    rgba(255,255,255,0.05) 0px 10px 32px inset,
-    rgba(74,184,255,0.15) 2px 2px 2px inset,
+  display: inline-block; margin-top: 32px; padding: 14px 36px;
+  background: var(--color-blue); color: #fff; font-size: 16px;
+  font-weight: 500; font-family: 'Inter', sans-serif;
+  border: none; border-radius: 999px; cursor: pointer;
+  box-shadow: rgba(26,111,255,0.2) 0px 6px 28px -1px, rgba(0,0,0,0.09) 0px 4px 9px 0px,
+    rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
     rgba(0,20,80,0.25) -1px -1px 6px inset;
 }
 
@@ -532,53 +405,30 @@ body {
    CONTROLS
    ============================================================= */
 .controls {
-  position: relative;
-  z-index: 2;
-  margin-top: 40px;
-  display: flex;
-  gap: 10px;
+  position: relative; z-index: 2;
+  margin-top: 40px; margin-bottom: 40px;
+  display: flex; gap: 10px;
   transition: opacity 600ms ease;
 }
 .controls.hidden { opacity: 0; pointer-events: none; }
 .ctrl-btn {
-  padding: 10px 28px;
-  border-radius: 999px;
-  border: none;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 150ms;
-  box-shadow:
-    rgba(26,111,255,0.2) 0px 6px 28px -1px,
-    rgba(0,0,0,0.09) 0px 4px 9px 0px,
-    rgba(255,255,255,0.05) 0px 10px 32px inset,
-    rgba(74,184,255,0.15) 2px 2px 2px inset,
+  padding: 10px 28px; border-radius: 999px; border: none;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 150ms;
+  box-shadow: rgba(26,111,255,0.2) 0px 6px 28px -1px, rgba(0,0,0,0.09) 0px 4px 9px 0px,
+    rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
     rgba(0,20,80,0.25) -1px -1px 6px inset;
 }
-.ctrl-btn.primary {
-  background: var(--color-blue);
-  color: #fff;
-}
+.ctrl-btn.primary { background: var(--color-blue); color: #fff; }
 .ctrl-btn.primary:hover {
   transform: translateY(-1px);
-  box-shadow:
-    rgba(26,111,255,0.35) 0px 6px 28px -1px,
-    rgba(0,0,0,0.09) 0px 4px 9px 0px,
-    rgba(255,255,255,0.05) 0px 10px 32px inset,
-    rgba(74,184,255,0.15) 2px 2px 2px inset,
+  box-shadow: rgba(26,111,255,0.35) 0px 6px 28px -1px, rgba(0,0,0,0.09) 0px 4px 9px 0px,
+    rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
     rgba(0,20,80,0.25) -1px -1px 6px inset;
 }
-.ctrl-btn.secondary {
-  background: #0a0a0a;
-  color: var(--color-text-muted);
-}
+.ctrl-btn.secondary { background: #0a0a0a; color: var(--color-text-muted); }
 .ctrl-btn.secondary:hover { color: #fff; }
-.ctrl-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none !important;
-}
+.ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
 /* =============================================================
    KEYFRAMES
@@ -595,17 +445,17 @@ body {
   0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
   40% { transform: scale(1.1); opacity: 1; }
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<div class="vignette"></div>
+<!-- FIX 4 — Blue glow behind phone -->
+<div class="phone-glow"></div>
 
-<!-- Wordmark above phone -->
+<!-- Wordmark + context -->
 <div class="wordmark" id="wordmark">
+  <div class="wordmark-context" id="contextLine">It's 7:03 AM. SalesScout already found your prospects.</div>
   <div class="wordmark-title">Sales<span class="blue">Scout</span></div>
   <div class="wordmark-tagline">AI Sales Intelligence for Freight Brokers</div>
 </div>
@@ -613,26 +463,22 @@ body {
 <!-- iPhone frame -->
 <div class="phone-wrap" id="phoneWrap">
   <div class="phone">
-    <!-- Side buttons -->
     <div class="side-btn mute"></div>
     <div class="side-btn vol-up"></div>
     <div class="side-btn vol-dn"></div>
     <div class="side-btn power"></div>
-
     <div class="screen">
+      <!-- Screen dim overlay for 7AM -->
+      <div class="screen-dim" id="screenDim"></div>
       <div class="dynamic-island"></div>
-
-      <!-- Status bar -->
       <div class="status-bar">
-        <span class="sb-time">9:41</span>
+        <span class="sb-time" id="sbTime">9:41</span>
         <span class="sb-icons">
           <svg viewBox="0 0 20 12"><circle cx="2" cy="10" r="1.5"/><circle cx="6" cy="7" r="1.5"/><circle cx="10" cy="4" r="1.5"/><circle cx="14" cy="1.5" r="1.5" opacity="0.3"/></svg>
           <svg viewBox="0 0 16 16"><path d="M1 5.5l1.5 1.5C5.3 4.2 10.7 4.2 13.5 7L15 5.5C11.4 1.9 4.6 1.9 1 5.5zm4 4l3 3 3-3a4.2 4.2 0 00-6 0zm-2-2l1.5 1.5a5.5 5.5 0 017 0L13 7.5C10.3 4.8 5.7 4.8 3 7.5z"/></svg>
           <svg viewBox="0 0 28 14"><rect x="0.5" y="1" width="23" height="12" rx="3" stroke="#fff" stroke-width="1" fill="none" opacity="0.4"/><rect x="2" y="2.5" width="18" height="9" rx="1.5" fill="#fff"/><path d="M25 5v4a2 2 0 000-4z" fill="#fff" opacity="0.4"/></svg>
         </span>
       </div>
-
-      <!-- iMessage header -->
       <div class="imsg-header">
         <span class="imsg-back">&#x2039;</span>
         <span class="imsg-badge">9</span>
@@ -642,8 +488,7 @@ body {
           <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
         </div>
       </div>
-
-      <!-- Notification banner (inside screen for z-index) -->
+      <!-- Notification banner -->
       <div class="notif-banner" id="notifBanner">
         <div class="nb-header">
           <div class="nb-icon">FS</div>
@@ -653,23 +498,14 @@ body {
         <div class="nb-title" id="nbTitle"></div>
         <div class="nb-body" id="nbBody"></div>
       </div>
-
-      <!-- Messages -->
       <div class="messages" id="messages"></div>
-
-      <!-- iMessage input -->
       <div class="imsg-input">
-        <div class="imsg-plus">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-        </div>
+        <div class="imsg-plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div class="imsg-field">
           <span>iMessage</span>
-          <div class="imsg-mic">
-            <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 00-4 4v6a4 4 0 008 0V5a4 4 0 00-4-4zm7 10a7 7 0 01-14 0H3a9 9 0 0017.94 1H21a7 7 0 010-1zm-7 9v3m-3 0h6"/></svg>
-          </div>
+          <div class="imsg-mic"><svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 00-4 4v6a4 4 0 008 0V5a4 4 0 00-4-4zm7 10a7 7 0 01-14 0H3a9 9 0 0017.94 1H21a7 7 0 010-1zm-7 9v3m-3 0h6"/></svg></div>
         </div>
       </div>
-
       <div class="home-indicator"></div>
     </div>
   </div>
@@ -680,6 +516,7 @@ body {
   <div class="cl-line1">Stop prospecting.</div>
   <div class="cl-line2">Start closing.</div>
   <div class="cl-sub">SalesScout runs overnight. You close in the morning.</div>
+  <div class="cl-logo">Sales<span class="blue">Scout</span></div>
   <button class="cl-cta">Get Early Access</button>
 </div>
 
@@ -691,39 +528,49 @@ body {
 
 <script>
 // =============================================================
-// CONFIG — All demo content, timing, and scene data.
-// Edit copy, delays, and scenes ONLY here.
+// CONFIG — All demo content, timing, and scene data
 // =============================================================
 const CONFIG = {
 
-  // ── Timing (ms) — every delay is editable ──
+  // ── Timing (ms) ──
   timing: {
-    typingMin:          1200,  // typing indicator before any assistant response
-    progressGap:         800,  // gap between progress bubbles
-    bubbleGap:          1000,  // gap between assistant response bubbles
-    sceneGap:           1500,  // pause between major scenes
-    userPause:           400,  // pause after user message appears (before typing sim)
-    userTypingSpeed:      40,  // ms per character for user typing simulation
-    readReceiptDelay:    800,  // delay before "Read" receipt shows
-    checkmarkGap:        200,  // gap between progress checkmark swaps
-    checkmarkPause:      400,  // pause after all checkmarks before responses
-    decisionPause:      1500,  // extra pause after PURSUE NOW — let it breathe
-    outreachPause:      2000,  // extra pause after outreach draft — viewer reads
-    longBubbleExtra:     500,  // extra ms added for bubbles with >20 words
-    notifHold:          2500,  // notification banner display time
-    phoneFadeOut:        600,  // phone fade before closing card
-    closingHold:        6000,  // closing card hold time
+    typingMin:            800,   // typing indicator before assistant response
+    userTypingSpeed:       15,   // ms per character for user typing sim
+    userTypingCap:        600,   // hard cap on total user typing time
+    progressGap:          800,   // gap between progress bubbles
+    bubbleGap:           1200,   // gap between assistant response bubbles
+    sceneGap:            1800,   // pause between major scenes
+    userPause:            400,   // pause before user starts typing
+    readReceiptDelay:     800,   // delay before "Read" shows
+    checkmarkGap:         200,   // gap between progress checkmark swaps
+    checkmarkPause:       400,   // pause after checkmarks before responses
+    decisionPause:       2000,   // extra pause after PURSUE NOW
+    outreachPause:       2500,   // extra pause after outreach draft
+    vibrantHealthPause:  4000,   // extra pause after long Vibrant Health bubble
+    pipelineBubbleGap:   1500,   // gap for pipeline response bubbles
+    longBubbleExtra:      800,   // extra ms for bubbles >20 words
+    notificationHold:    4000,   // 7AM notification banner hold
+    sevenAmBubbleGap:    1500,   // gap between overnight research bubbles
+    silenceAfterBriefs:  4000,   // silence after "Ready to brief" before fade
+    preSevenAmPause:     2000,   // pause before 7AM sequence starts
+    screenDimFade:        800,   // screen dim fade duration (CSS)
+    clockFade:            600,   // clock text swap fade
+    screenUndim:          400,   // screen undim duration
+    phoneFadeOut:         800,   // phone fade before closing
+    closingHold:         6000,   // closing card hold
   },
 
-  // ── Pre-loaded messages (visible before demo starts) ──
+  // ── FIX 6 — Pre-loaded messages ──
   preloaded: [
     { type: 'user', text: 'Brief House of Raeford Farms' },
-    { type: 'assistant', text: 'PURSUE NOW \u2014 brief saved to your morning list.' },
+    { type: 'timestamp', text: 'Yesterday 4:23 PM' },
+    { type: 'assistant', text: 'PURSUE NOW \u2014 brief and outreach draft saved to your morning list.' },
+    { type: 'timestamp', text: 'Yesterday 4:24 PM' },
+    { type: 'timestamp', text: 'Today 9:41 AM' },
   ],
 
-  // ── Scene content — exact copy, do not change ──
+  // ── FIX 7 — Scene content ──
   scenes: [
-
     // SCENE 1 — The Query
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
@@ -734,8 +581,8 @@ const CONFIG = {
         'Filtering for complexity and open decision windows\u2026',
       ],
       responses: [
-        { text: '2 high-priority prospects identified.\nDecision windows open NOW.' },
-        { text: 'VIBRANT HEALTH PRODUCTS \u2014 Rossville, TN\n$48.5M facility opening this quarter\n394 jobs \u2014 first US manufacturing location\nSupply chain being built from scratch\n\nFreight Profile:\nReefer + organic handling required\nCross-border inbound from Canada\nSoutheast outbound distribution\n\nTrigger: Making vendor decisions THIS QUARTER' },
+        { text: '2 high-priority prospects identified. Decision windows open NOW.' },
+        { text: 'VIBRANT HEALTH PRODUCTS \u2014 Rossville, TN\n$48.5M facility opening this quarter\n394 jobs \u2014 first US manufacturing location\nSupply chain being built from scratch\n\nFreight Profile:\nReefer + organic handling required\nCross-border inbound from Canada\nSoutheast outbound distribution\n\nTrigger: Making vendor decisions THIS QUARTER', extraPause: 'vibrantHealth' },
         { text: '\u26a1 Decision: PURSUE NOW', style: 'decision' },
         { text: 'FINE ORGANIC INDUSTRIES \u2014 Jonesville, SC\nFirst US facility, construction underway\nFood-grade specialty ingredients\nOutbound to CPG manufacturers nationwide\n\nTrigger: Freight relationships forming right now.\nNo broker has this account yet.' },
         { text: '\u26a1 Decision: PURSUE NOW', style: 'decision' },
@@ -746,11 +593,9 @@ const CONFIG = {
     {
       user: 'draft outreach for Vibrant Health',
       readReceipt: true,
-      progress: [
-        'Drafting outreach\u2026',
-      ],
+      progress: [ 'Drafting outreach\u2026' ],
       responses: [
-        { text: 'Subject: Freight partner for your Rossville launch\n\nSaw Vibrant Health is standing up your first US facility this quarter in Rossville.\n\nWhen a brand is building a supply chain from scratch, the freight decisions made in the first 90 days tend to stick. I\u2019m curious \u2014 do you have a Southeast carrier partner locked in yet, or is that still coming together?\n\nWe specialize in food/bev and organic CPG freight out of Jacksonville. Have helped similar brands nail the launch window without scrambling for capacity at the worst time.\n\nWorth a quick conversation?' },
+        { text: 'Subject: Freight partner for your Rossville launch\n\nSaw Vibrant Health is standing up your first US facility this quarter in Rossville.\n\nWhen a brand is building a supply chain from scratch, the freight decisions made in the first 90 days tend to stick. I\u2019m curious \u2014 do you have a Southeast carrier partner locked in yet, or is that still coming together?\n\nWe specialize in food/bev and organic CPG freight out of Jacksonville. Have helped similar brands nail the launch window without scrambling for capacity at the worst time.\n\nWorth a quick conversation?', extraPause: 'outreach' },
       ],
     },
 
@@ -758,9 +603,7 @@ const CONFIG = {
     {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
-      progress: [
-        'Scanning facility announcements and hiring signals\u2026',
-      ],
+      progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
         { text: 'Fine Organic Industries \u2014 Jonesville SC\nFirst US facility, open decision window\nScore: 9.1 \u2014 Pursue Now' },
@@ -774,34 +617,38 @@ const CONFIG = {
       user: 'pursue Vibrant Health and Fine Organics',
       readReceipt: true,
       progress: [],
+      responseGap: 1500,
       responses: [
         { text: 'Both added to pipeline.' },
         { text: 'Vibrant Health \u2014 Next step:\nContact ops/procurement lead this week.\nAsk: \u2018What\u2019s your biggest freight concern\nas you stand up US manufacturing?\u2019' },
         { text: 'Fine Organics \u2014 Next step:\nReach US supply chain lead.\nPosition as CPG specialist who serves\ntheir end customers directly.' },
       ],
-      // Override gap for pipeline responses (tighter)
-      responseGap: 800,
     },
   ],
 
-  // ── Notification (Scene 6) ──
-  notification: {
-    title: '7:00 AM \u2014 New Prospects Ready',
-    body:  '4 high-fit companies identified overnight',
+  // ── FIX 1 — 7AM Climax content ──
+  sevenAm: {
+    notifTitle: 'Good morning. 4 new prospects ready.',
+    notifBody: 'Your overnight research is waiting.',
+    bubbles: [
+      'Good morning. While you were off the clock I researched 4 companies matching your ICP.',
+      'HF Foods Group \u2014 Powder Springs GA\n190,000 sq ft DC opened December 2025\nStill ramping \u2014 carrier base not yet locked\nMulti-temp: fresh, frozen, dry van\nScore: 9.1 \u2014 Pursue Now',
+      'Southern Glazer\u2019s \u2014 West Columbia SC\n412,500 sq ft facility opened February 2026\nSupply chain leadership transition happening NOW\nDouble trigger = open vendor decision window\nScore: 9.3 \u2014 Pursue Now',
+      'Orangeburg County SC \u2014 $400M facility\nCompany name still confidential\nGreenfield build \u2014 zero incumbent carriers\nFood/bev production, 400 jobs\nScore: 9.4 \u2014 Move fast when name drops',
+      'Ready to brief all 4 when you are.',
+    ],
   },
 
-  // ── Closing card ──
   closing: {
     line1: 'Stop prospecting.',
     line2: 'Start closing.',
-    sub:   'SalesScout runs overnight. You close in the morning.',
-    cta:   'Get Early Access',
+    sub: 'SalesScout runs overnight. You close in the morning.',
+    cta: 'Get Early Access',
   },
 };
 
-
 // =============================================================
-// ENGINE — drives the demo, do not edit unless changing behavior
+// ENGINE
 // =============================================================
 const $ = s => document.querySelector(s);
 const msgBox      = $('#messages');
@@ -809,9 +656,12 @@ const startBtn    = $('#startBtn');
 const replayBtn   = $('#replayBtn');
 const phoneWrap   = $('#phoneWrap');
 const wordmark    = $('#wordmark');
+const contextLine = $('#contextLine');
 const controls    = $('#controls');
 const closingOv   = $('#closingOverlay');
 const notifBanner = $('#notifBanner');
+const screenDim   = $('#screenDim');
+const sbTime      = $('#sbTime');
 let running = false;
 
 startBtn.addEventListener('click', () => runDemo());
@@ -819,8 +669,8 @@ replayBtn.addEventListener('click', () => runDemo());
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function scroll() { msgBox.scrollTop = msgBox.scrollHeight; }
+function wordCount(t) { return t.trim().split(/\s+/).length; }
 
-// ── Add elements to chat ──
 function addBubble(type, text, style, preloaded) {
   const div = document.createElement('div');
   let cls = 'msg ' + type;
@@ -835,9 +685,7 @@ function addBubble(type, text, style, preloaded) {
       div.classList.add('show');
       scroll();
     }));
-  } else {
-    scroll();
-  }
+  } else { scroll(); }
   return div;
 }
 
@@ -883,7 +731,7 @@ function addProgress(text) {
   return div;
 }
 
-// ── Simulate user typing character by character ──
+// User typing simulation — capped at userTypingCap
 async function typeUserMessage(text) {
   const t = CONFIG.timing;
   const div = document.createElement('div');
@@ -891,36 +739,29 @@ async function typeUserMessage(text) {
   div.style.whiteSpace = 'pre-line';
   div.textContent = '';
   msgBox.appendChild(div);
-  // Slide in immediately but empty
   requestAnimationFrame(() => requestAnimationFrame(() => {
     div.classList.add('show');
     scroll();
   }));
-  // Type character by character
+  const totalTime = Math.min(text.length * t.userTypingSpeed, t.userTypingCap);
+  const perChar = totalTime / text.length;
   for (let i = 0; i < text.length; i++) {
     div.textContent = text.substring(0, i + 1);
     scroll();
-    await sleep(t.userTypingSpeed);
+    await sleep(perChar);
   }
   return div;
 }
 
-// ── Count words in text ──
-function wordCount(text) {
-  return text.trim().split(/\s+/).length;
-}
-
-// ── Play a single scene ──
+// Play a scene
 async function playScene(scene) {
   const t = CONFIG.timing;
 
-  // User message — typed character by character
+  // User types message
   if (scene.user) {
     await sleep(t.userPause);
     await typeUserMessage(scene.user);
     await sleep(200);
-
-    // Read receipt
     if (scene.readReceipt) {
       const rr = addReadReceipt();
       await sleep(t.readReceiptDelay);
@@ -936,84 +777,111 @@ async function playScene(scene) {
     removeTyping(typing);
   }
 
-  // Progress bubbles — sequential
+  // Progress bubbles
   const progressEls = [];
   for (const p of scene.progress) {
     progressEls.push(addProgress(p));
     await sleep(t.progressGap);
   }
 
-  // Checkmark swap when results arrive
+  // Checkmarks
   if (progressEls.length > 0 && scene.responses.length > 0) {
-    for (let i = 0; i < progressEls.length; i++) {
-      progressEls[i].classList.add('checked');
+    for (const el of progressEls) {
+      el.classList.add('checked');
       await sleep(t.checkmarkGap);
     }
     await sleep(t.checkmarkPause);
   }
 
-  // Typing before responses (if no progress)
+  // Typing if no progress
   if (scene.progress.length === 0 && scene.responses.length > 0) {
     const typing = showTyping();
     await sleep(t.typingMin);
     removeTyping(typing);
   }
 
-  // Response bubbles — sequential with smart gaps
+  // Response bubbles with smart gaps
   const baseGap = scene.responseGap || t.bubbleGap;
   for (const r of scene.responses) {
     addBubble('assistant', r.text, r.style || '');
-
-    // Calculate gap: base + long bubble extra + decision/outreach pauses
     let gap = baseGap;
     if (wordCount(r.text) > 20) gap += t.longBubbleExtra;
     if (r.style === 'decision') gap += t.decisionPause;
-    // Detect outreach draft (long single bubble with "Subject:")
-    if (r.text.startsWith('Subject:')) gap += t.outreachPause;
+    if (r.extraPause === 'vibrantHealth') gap = t.vibrantHealthPause;
+    if (r.extraPause === 'outreach') gap = t.outreachPause;
     await sleep(gap);
   }
 }
 
-// ── Notification banner ──
-async function playNotification() {
+// FIX 1 — 7AM climax sequence
+async function playSevenAm() {
   const t = CONFIG.timing;
-  const n = CONFIG.notification;
-  $('#nbTitle').textContent = n.title;
-  $('#nbBody').textContent = n.body;
+  const sa = CONFIG.sevenAm;
+
+  // Step 1: Pause
+  await sleep(t.preSevenAmPause);
+
+  // Step 2: Dim screen
+  screenDim.classList.add('show');
+  await sleep(800);
+
+  // Step 3: Fade clock to 7:00 AM
+  sbTime.style.opacity = '0';
+  await sleep(300);
+  sbTime.textContent = '7:00 AM';
+  sbTime.style.opacity = '1';
+  await sleep(300);
+
+  // Step 4: Drop notification
+  $('#nbTitle').textContent = sa.notifTitle;
+  $('#nbBody').textContent = sa.notifBody;
   notifBanner.classList.add('show');
-  await sleep(t.notifHold);
+  await sleep(t.notificationHold);
   notifBanner.classList.remove('show');
   await sleep(500);
-}
 
-// ── Closing card ──
-async function playClosing() {
-  const t = CONFIG.timing;
-  // Fade phone + wordmark + controls
+  // Step 5: Undim
+  screenDim.classList.remove('show');
+  await sleep(400);
+
+  // Step 6: Overnight research bubbles — no user input
+  for (const text of sa.bubbles) {
+    addBubble('assistant', text);
+    let gap = t.sevenAmBubbleGap;
+    if (wordCount(text) > 20) gap += t.longBubbleExtra;
+    await sleep(gap);
+  }
+
+  // Step 7: Silence — the feature
+  await sleep(t.silenceAfterBriefs);
+
+  // Step 8: Fade phone
   phoneWrap.classList.add('fade-out');
   wordmark.classList.add('hidden');
   controls.classList.add('hidden');
   await sleep(t.phoneFadeOut);
+}
 
+async function playClosing() {
   closingOv.classList.add('show');
-  await sleep(t.closingHold);
+  await sleep(CONFIG.timing.closingHold);
 }
 
-// ── Load pre-loaded messages ──
 function loadPreloaded() {
-  CONFIG.preloaded.forEach(m => {
-    addBubble(m.type, m.text, '', true);
-  });
-  addTimestamp('Today 9:41 AM');
+  for (const m of CONFIG.preloaded) {
+    if (m.type === 'timestamp') {
+      addTimestamp(m.text);
+    } else {
+      addBubble(m.type, m.text, '', true);
+    }
+  }
 }
 
-// ── Main demo runner ──
 async function runDemo() {
   if (running) return;
   running = true;
   startBtn.disabled = true;
   replayBtn.disabled = true;
-  const t = CONFIG.timing;
 
   // Reset
   msgBox.innerHTML = '';
@@ -1022,21 +890,27 @@ async function runDemo() {
   wordmark.classList.remove('hidden');
   controls.classList.remove('hidden');
   notifBanner.classList.remove('show');
+  screenDim.classList.remove('show');
+  sbTime.textContent = '9:41';
+  sbTime.style.opacity = '1';
+
+  // Fade context line
+  contextLine.classList.add('hidden');
 
   // Load pre-loaded messages
   loadPreloaded();
-  await sleep(600);
+  await sleep(800);
 
-  // Play all scenes in order
+  // Play scenes 1-4
   for (const scene of CONFIG.scenes) {
     await playScene(scene);
-    await sleep(t.sceneGap);
+    await sleep(CONFIG.timing.sceneGap);
   }
 
-  // Notification
-  await playNotification();
+  // 7AM climax sequence
+  await playSevenAm();
 
-  // Closing
+  // Closing card
   await playClosing();
 
   running = false;
