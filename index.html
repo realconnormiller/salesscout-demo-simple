@@ -130,18 +130,75 @@ body {
   flex-direction: column;
 }
 
-/* Screen dim overlay for 7AM sequence */
-.screen-dim {
+/* 7AM lock screen overlay — full black takeover */
+.lock-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: #000;
   z-index: 40;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 800ms ease;
+  transition: opacity 1000ms ease;
   border-radius: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
-.screen-dim.show { opacity: 1; }
+.lock-overlay.show { opacity: 1; pointer-events: auto; }
+.lock-overlay .lock-time {
+  font-size: 72px;
+  font-weight: 300;
+  letter-spacing: -2px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.lock-overlay .lock-time.visible { opacity: 1; }
+.lock-overlay .lock-date {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.lock-overlay .lock-date.visible { opacity: 1; }
+/* Lock screen notification — positioned near top */
+.lock-notif {
+  position: absolute;
+  top: 70px;
+  left: 16px;
+  right: 16px;
+  background: rgba(30,30,30,0.9);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 12px 16px;
+  transform: translateY(-200%);
+  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 45;
+}
+.lock-notif.show { transform: translateY(0); }
+.lock-notif.tap { animation: notifTap 250ms ease forwards; }
+@keyframes notifTap {
+  0%   { transform: translateY(0) scale(1); }
+  32%  { transform: translateY(0) scale(0.97); }
+  72%  { transform: translateY(0) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+.lock-notif .ln-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.lock-notif .ln-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-blue), var(--color-blue-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #fff; flex-shrink: 0;
+}
+.lock-notif .ln-app { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); }
+.lock-notif .ln-time { font-size: 12px; color: rgba(255,255,255,0.35); margin-left: auto; }
+.lock-notif .ln-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+.lock-notif .ln-body { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.35; }
 
 .dynamic-island {
   position: absolute;
@@ -387,6 +444,7 @@ body {
   background: linear-gradient(135deg, #1a6fff, #4db8ff);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+  margin-top: 8px;
 }
 .cl-sub { color: #999999; font-size: 18px; font-weight: 400; margin-top: 24px; }
 .cl-logo { font-size: 22px; font-weight: 600; margin-top: 20px; }
@@ -468,8 +526,20 @@ body {
     <div class="side-btn vol-dn"></div>
     <div class="side-btn power"></div>
     <div class="screen">
-      <!-- Screen dim overlay for 7AM -->
-      <div class="screen-dim" id="screenDim"></div>
+      <!-- 7AM lock screen overlay -->
+      <div class="lock-overlay" id="lockOverlay">
+        <div class="lock-time" id="lockTime">7:00</div>
+        <div class="lock-date" id="lockDate">Wednesday, March 26</div>
+        <div class="lock-notif" id="lockNotif">
+          <div class="ln-header">
+            <div class="ln-icon">FS</div>
+            <div><div class="ln-app">SalesScout</div></div>
+            <div class="ln-time">now</div>
+          </div>
+          <div class="ln-title">Good morning. 4 new prospects ready.</div>
+          <div class="ln-body">Your overnight research is waiting — tap to view.</div>
+        </div>
+      </div>
       <div class="dynamic-island"></div>
       <div class="status-bar">
         <span class="sb-time" id="sbTime">9:41</span>
@@ -549,7 +619,7 @@ const CONFIG = {
     vibrantHealthPause:  4000,   // extra pause after long Vibrant Health bubble
     pipelineBubbleGap:   1500,   // gap for pipeline response bubbles
     longBubbleExtra:      800,   // extra ms for bubbles >20 words
-    notificationHold:    4000,   // 7AM notification banner hold
+    notificationHold:    3000,   // 7AM lock screen notification hold
     sevenAmBubbleGap:    1500,   // gap between overnight research bubbles
     silenceAfterBriefs:  4000,   // silence after "Ready to brief" before fade
     preSevenAmPause:     2000,   // pause before 7AM sequence starts
@@ -629,7 +699,7 @@ const CONFIG = {
   // ── FIX 1 — 7AM Climax content ──
   sevenAm: {
     notifTitle: 'Good morning. 4 new prospects ready.',
-    notifBody: 'Your overnight research is waiting.',
+    notifBody: 'Your overnight research is waiting \u2014 tap to view.',
     bubbles: [
       'Good morning. While you were off the clock I researched 4 companies matching your ICP.',
       'HF Foods Group \u2014 Powder Springs GA\n190,000 sq ft DC opened December 2025\nStill ramping \u2014 carrier base not yet locked\nMulti-temp: fresh, frozen, dry van\nScore: 9.1 \u2014 Pursue Now',
@@ -651,17 +721,20 @@ const CONFIG = {
 // ENGINE
 // =============================================================
 const $ = s => document.querySelector(s);
-const msgBox      = $('#messages');
-const startBtn    = $('#startBtn');
-const replayBtn   = $('#replayBtn');
-const phoneWrap   = $('#phoneWrap');
-const wordmark    = $('#wordmark');
-const contextLine = $('#contextLine');
-const controls    = $('#controls');
-const closingOv   = $('#closingOverlay');
-const notifBanner = $('#notifBanner');
-const screenDim   = $('#screenDim');
-const sbTime      = $('#sbTime');
+const msgBox       = $('#messages');
+const startBtn     = $('#startBtn');
+const replayBtn    = $('#replayBtn');
+const phoneWrap    = $('#phoneWrap');
+const wordmark     = $('#wordmark');
+const contextLine  = $('#contextLine');
+const controls     = $('#controls');
+const closingOv    = $('#closingOverlay');
+const notifBanner  = $('#notifBanner');
+const lockOverlay  = $('#lockOverlay');
+const lockTime     = $('#lockTime');
+const lockDate     = $('#lockDate');
+const lockNotif    = $('#lockNotif');
+const sbTime       = $('#sbTime');
 let running = false;
 
 startBtn.addEventListener('click', () => runDemo());
@@ -813,58 +886,69 @@ async function playScene(scene) {
   }
 }
 
-// FIX 1 — 7AM climax sequence
+// 7AM CLIMAX SEQUENCE — rebuilt from scratch
 async function playSevenAm() {
   const t = CONFIG.timing;
   const sa = CONFIG.sevenAm;
 
-  // Step 1: Pause
+  // Step 1: Pause after pipeline
   await sleep(t.preSevenAmPause);
 
-  // Step 2: Dim screen
-  screenDim.classList.add('show');
-  await sleep(800);
+  // Step 2: Phone screen fades to black — lock screen takes over
+  lockTime.classList.remove('visible');
+  lockDate.classList.remove('visible');
+  lockNotif.classList.remove('show', 'tap');
+  lockOverlay.classList.add('show');  // opacity 0→1, 1000ms
+  await sleep(1000);
 
-  // Step 3: Fade clock to 7:00 AM
-  sbTime.style.opacity = '0';
-  await sleep(300);
-  sbTime.textContent = '7:00 AM';
-  sbTime.style.opacity = '1';
-  await sleep(300);
+  // Step 3: Large clock + date fade in on dark screen
+  lockTime.classList.add('visible');
+  lockDate.classList.add('visible');
+  await sleep(600);
 
-  // Step 4: Drop notification
-  $('#nbTitle').textContent = sa.notifTitle;
-  $('#nbBody').textContent = sa.notifBody;
-  notifBanner.classList.add('show');
-  await sleep(t.notificationHold);
-  notifBanner.classList.remove('show');
-  await sleep(500);
+  // Step 4: Pause on lock screen
+  await sleep(1000);
 
-  // Step 5: Undim
-  screenDim.classList.remove('show');
+  // Step 5: Notification drops with spring animation
+  lockNotif.classList.add('show');
+  await sleep(t.notificationHold);  // 3000ms hold (using notificationHold but we override below)
+
+  // Step 6: Tap animation
+  lockNotif.classList.add('tap');
+  await sleep(250);
+
+  // Step 7: Lock screen fades out, chat fades back in
+  // First, pre-render overnight bubbles into chat while lock screen is still up
+  for (const text of sa.bubbles) {
+    addBubble('assistant', text, '', true);  // preloaded = already visible
+  }
+  scroll();
+
+  // Now fade lock screen away — chat with overnight messages revealed
+  lockOverlay.classList.remove('show');
   await sleep(400);
 
-  // Step 6: Overnight research bubbles — no user input
-  for (const text of sa.bubbles) {
-    addBubble('assistant', text);
-    let gap = t.sevenAmBubbleGap;
-    if (wordCount(text) > 20) gap += t.longBubbleExtra;
-    await sleep(gap);
-  }
+  // Update status bar clock
+  sbTime.textContent = '7:00';
 
-  // Step 7: Silence — the feature
+  // Step 9: Silence — the feature. 4 seconds of nothing.
   await sleep(t.silenceAfterBriefs);
 
-  // Step 8: Fade phone
+  // Step 10: Fade phone out
   phoneWrap.classList.add('fade-out');
   wordmark.classList.add('hidden');
   controls.classList.add('hidden');
   await sleep(t.phoneFadeOut);
 }
 
+// CLOSING CARD — fade in, hold, then show replay
 async function playClosing() {
+  const t = CONFIG.timing;
   closingOv.classList.add('show');
-  await sleep(CONFIG.timing.closingHold);
+  await sleep(t.closingHold);
+
+  // Show replay controls over closing card
+  controls.classList.remove('hidden');
 }
 
 function loadPreloaded() {
@@ -877,22 +961,29 @@ function loadPreloaded() {
   }
 }
 
-async function runDemo() {
-  if (running) return;
-  running = true;
-  startBtn.disabled = true;
-  replayBtn.disabled = true;
-
-  // Reset
+function resetAll() {
   msgBox.innerHTML = '';
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
   wordmark.classList.remove('hidden');
   controls.classList.remove('hidden');
   notifBanner.classList.remove('show');
-  screenDim.classList.remove('show');
+  lockOverlay.classList.remove('show');
+  lockTime.classList.remove('visible');
+  lockDate.classList.remove('visible');
+  lockNotif.classList.remove('show', 'tap');
   sbTime.textContent = '9:41';
   sbTime.style.opacity = '1';
+}
+
+async function runDemo() {
+  if (running) return;
+  running = true;
+  startBtn.disabled = true;
+  replayBtn.disabled = true;
+
+  // Reset everything
+  resetAll();
 
   // Fade context line
   contextLine.classList.add('hidden');
