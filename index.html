@@ -46,13 +46,13 @@ body {
    FIX 4 — Blue glow behind phone
    ============================================================= */
 .phone-glow {
-  position: fixed;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(ellipse, rgba(26,111,255,0.17) 0%, transparent 70%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(ellipse at center, rgba(26,111,255,0.17) 0%, transparent 65%);
   pointer-events: none;
   z-index: 0;
 }
@@ -468,6 +468,14 @@ body {
     rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
     rgba(0,20,80,0.25) -1px -1px 6px inset;
 }
+.cl-replay {
+  display: inline-block; margin-top: 16px; padding: 10px 28px;
+  background: transparent; color: #fff; font-size: 14px;
+  font-weight: 400; font-family: 'Inter', sans-serif;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 999px;
+  cursor: pointer; transition: all 150ms;
+}
+.cl-replay:hover { border-color: rgba(255,255,255,0.6); }
 
 /* =============================================================
    CONTROLS
@@ -518,9 +526,6 @@ body {
 </head>
 <body>
 
-<!-- FIX 4 — Blue glow behind phone -->
-<div class="phone-glow"></div>
-
 <!-- Wordmark + context -->
 <div class="wordmark" id="wordmark">
   <div class="wordmark-context" id="contextLine">It's 7:03 AM. SalesScout already found your prospects.</div>
@@ -530,6 +535,7 @@ body {
 
 <!-- iPhone frame -->
 <div class="phone-wrap" id="phoneWrap">
+  <div class="phone-glow"></div>
   <div class="phone">
     <div class="side-btn mute"></div>
     <div class="side-btn vol-up"></div>
@@ -613,6 +619,7 @@ Worth a quick conversation?</div>
   <div class="cl-sub">Right now, someone is calling your best prospects before you do.</div>
   <div class="cl-logo">Sales<span class="blue">Scout</span></div>
   <button class="cl-cta">Get Early Access</button>
+  <button class="cl-replay" id="watchAgain">Watch Again</button>
 </div>
 
 <!-- Controls -->
@@ -652,7 +659,7 @@ const CONFIG = {
     clockFade:            600,   // clock text swap fade
     screenUndim:          400,   // screen undim duration
     phoneFadeOut:         800,   // phone fade before closing
-    closingHold:         6000,   // closing card hold
+    closingHold:         4000,   // closing card hold
   },
 
   // ── FIX 6 — Pre-loaded messages ──
@@ -730,6 +737,7 @@ const CONFIG = {
       'Good morning. While you were off the clock I researched 4 companies matching your ICP.',
       'HF Foods Group \u2014 Powder Springs GA\n190,000 sq ft DC opened December 2025\nStill ramping \u2014 carrier base not yet locked\nMulti-temp: fresh, frozen, dry van\nScore: 9.1 \u2014 Pursue Now',
       'Southern Glazer\u2019s \u2014 West Columbia SC\n412,500 sq ft facility opened February 2026\nSupply chain leadership transition happening NOW\nDouble trigger = open vendor decision window\nScore: 9.3 \u2014 Pursue Now',
+      'Walmart Milk Processing \u2014 Valdosta, GA\n$350M facility opened December 2025\n400 jobs, supplies 650+ Walmart and Sam\u2019s Club stores\nDairy cold chain \u2014 daily reefer to Southeast stores\nScore: 8.9 \u2014 Pursue as overflow provider',
       'Orangeburg County SC \u2014 $400M facility\nCompany name still confidential\nGreenfield build \u2014 zero incumbent carriers\nFood/bev production, 400 jobs\nScore: 9.4 \u2014 Move fast when name drops',
       'Ready to brief all 4 when you are.',
     ],
@@ -765,6 +773,7 @@ let running = false;
 
 startBtn.addEventListener('click', () => runDemo());
 replayBtn.addEventListener('click', () => runDemo());
+$('#watchAgain').addEventListener('click', () => { running = false; runDemo(); });
 
 // Auto-scroll to bottom on page load so "Today 9:41 AM" is visible
 requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
@@ -985,25 +994,28 @@ async function playSevenAm() {
   // Step 9: 4000ms silence — the feature
   await sleep(t.silenceAfterBriefs);
 
-  // Step 10: Fade phone out 800ms
+  // Step 10: Fade phone out 800ms — COMPLETE before closing card
   phoneWrap.classList.add('fade-out');
   wordmark.classList.add('hidden');
   controls.classList.add('hidden');
   await sleep(t.phoneFadeOut);
+  // Ensure phone is fully gone
+  await sleep(100);
 }
 
-// CLOSING CARD — fade in, show replay immediately (FIX 8)
+// CLOSING CARD — fade in AFTER phone is fully gone (BUG 2 fix)
 async function playClosing() {
   const t = CONFIG.timing;
+  // Phone is already fully faded at this point
   closingOv.classList.add('show');
+  await sleep(600); // wait for closing fade-in to complete
 
-  // FIX 8: Enable replay immediately so viewer can restart during hold
+  // Enable replay immediately so viewer can restart during hold
   running = false;
   startBtn.disabled = false;
   replayBtn.disabled = false;
-  controls.classList.remove('hidden');
 
-  await sleep(t.closingHold);
+  await sleep(t.closingHold - 600);
 }
 
 function loadPreloaded() {
