@@ -713,7 +713,9 @@ const CONFIG = {
     notifTitle: 'Good morning. 4 new prospects ready.',
     notifBody: 'Your overnight research is waiting \u2014 tap to view.',
     bubbles: [
-      'Good morning. While you were off the clock I researched 4 companies matching your ICP.',
+      'Good morning, Connor.',
+      'While you slept I found 4 companies with open decision windows. Your strongest play today is HF Foods \u2014 brand new DC, still building their carrier base. Nobody has called them yet.',
+      'Let\u2019s get after it.',
       'HF Foods Group \u2014 Powder Springs GA\n190,000 sq ft DC opened December 2025\nStill ramping \u2014 carrier base not yet locked\nMulti-temp: fresh, frozen, dry van\nScore: 9.1 \u2014 Pursue Now',
       'Southern Glazer\u2019s \u2014 West Columbia SC\n412,500 sq ft facility opened February 2026\nSupply chain leadership transition happening NOW\nDouble trigger = open vendor decision window\nScore: 9.3 \u2014 Pursue Now',
       'Walmart Milk Processing \u2014 Valdosta, GA\n$350M facility opened December 2025\n400 jobs, supplies 650+ Walmart and Sam\u2019s Club stores\nDairy cold chain \u2014 daily reefer to Southeast stores\nScore: 8.9 \u2014 Pursue as overflow provider',
@@ -999,9 +1001,10 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  for (const text of sa.bubbles) {
-    addBubble('assistant', text);
-    await sleep(t.sevenAmBubbleGap);
+  for (let i = 0; i < sa.bubbles.length; i++) {
+    addBubble('assistant', sa.bubbles[i]);
+    // First 3 bubbles (intro) use 1200ms, company bubbles use 1800ms
+    await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
   }
 
   await sleep(t.silenceAfterBriefs);
