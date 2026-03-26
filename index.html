@@ -434,14 +434,57 @@ body {
    MOBILE — stack layout
    ============================================================= */
 @media (max-width: 768px) {
-  .layout { flex-direction: column; overflow-y: auto; height: auto; min-height: 100dvh; }
-  .col-left { min-height: auto; padding: 20px 0; }
-  .col-right {
-    width: 100%; padding: 0 24px 32px; align-items: center; text-align: center;
+  .layout {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100dvh;
+    height: auto;
+    overflow-y: auto;
+    padding: 24px 20px;
+    gap: 24px;
   }
-  .phone-wrap { transform: scale(1.0); }
-  .stat-text { max-width: 100%; }
-  .panel-btn { max-width: 320px; }
+  .col-right {
+    width: 100%;
+    max-width: 390px;
+    padding: 0;
+    order: -1;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .col-left {
+    min-height: auto;
+    padding: 0;
+    width: 100%;
+    max-width: 390px;
+  }
+  .phone-wrap {
+    transform: scale(1.0);
+    transform-origin: center top;
+    width: 100%;
+    max-width: 390px;
+  }
+  .stat-text {
+    text-align: center;
+    max-width: 320px;
+    font-size: 16px;
+    margin: 0 auto;
+  }
+  .panel-btn {
+    width: 100%;
+    max-width: 390px;
+  }
+  .small-print {
+    text-align: center;
+    margin-top: 16px;
+  }
+}
+@media (max-width: 390px) {
+  .phone-wrap {
+    transform: scale(0.9);
+    transform-origin: center top;
+  }
 }
 </style>
 </head>
