@@ -23,10 +23,10 @@
   --color-text-primary:     #ffffff;
   --color-text-secondary:   #999999;
   --color-text-muted:       #666666;
-  --timing-progress-gap:    600ms;
-  --timing-bubble-gap:      800ms;
-  --timing-scene-gap:       800ms;
-  --timing-typing-min:      800ms;
+  --timing-progress-gap:    800ms;
+  --timing-bubble-gap:      1000ms;
+  --timing-scene-gap:       1500ms;
+  --timing-typing-min:      1200ms;
 }
 
 /* =============================================================
@@ -34,17 +34,23 @@
    ============================================================= */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
 body {
   background: var(--color-bg);
   font-family: 'Inter', -apple-system, sans-serif;
   color: var(--color-text-primary);
-  width: 1920px;
-  height: 1080px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
   position: relative;
 }
 
@@ -93,6 +99,8 @@ body {
 .phone-wrap {
   position: relative;
   z-index: 1;
+  transform: scale(0.85);
+  transform-origin: center center;
   transition: opacity 600ms ease;
 }
 .phone-wrap.fade-out { opacity: 0; }
@@ -690,17 +698,21 @@ const CONFIG = {
 
   // ── Timing (ms) — every delay is editable ──
   timing: {
-    typingMin:      800,   // minimum typing indicator display
-    progressGap:    600,   // gap between progress bubbles
-    bubbleGap:      800,   // gap between assistant response bubbles
-    sceneGap:       800,   // pause between major scenes
-    userPause:      400,   // pause after user message appears
-    readReceiptDelay: 300, // delay before "Read" shows
-    checkmarkGap:   200,   // gap between progress checkmark swaps
-    checkmarkPause: 300,   // pause after all checkmarks before responses
-    notifHold:      2500,  // notification banner display time
-    phoneFadeOut:   600,   // phone fade before closing card
-    closingHold:    5000,  // closing card hold time
+    typingMin:          1200,  // typing indicator before any assistant response
+    progressGap:         800,  // gap between progress bubbles
+    bubbleGap:          1000,  // gap between assistant response bubbles
+    sceneGap:           1500,  // pause between major scenes
+    userPause:           400,  // pause after user message appears (before typing sim)
+    userTypingSpeed:      40,  // ms per character for user typing simulation
+    readReceiptDelay:    800,  // delay before "Read" receipt shows
+    checkmarkGap:        200,  // gap between progress checkmark swaps
+    checkmarkPause:      400,  // pause after all checkmarks before responses
+    decisionPause:      1500,  // extra pause after PURSUE NOW — let it breathe
+    outreachPause:      2000,  // extra pause after outreach draft — viewer reads
+    longBubbleExtra:     500,  // extra ms added for bubbles with >20 words
+    notifHold:          2500,  // notification banner display time
+    phoneFadeOut:        600,  // phone fade before closing card
+    closingHold:        6000,  // closing card hold time
   },
 
   // ── Pre-loaded messages (visible before demo starts) ──
@@ -767,8 +779,8 @@ const CONFIG = {
         { text: 'Vibrant Health \u2014 Next step:\nContact ops/procurement lead this week.\nAsk: \u2018What\u2019s your biggest freight concern\nas you stand up US manufacturing?\u2019' },
         { text: 'Fine Organics \u2014 Next step:\nReach US supply chain lead.\nPosition as CPG specialist who serves\ntheir end customers directly.' },
       ],
-      // Override gap for pipeline responses
-      responseGap: 600,
+      // Override gap for pipeline responses (tighter)
+      responseGap: 800,
     },
   ],
 
@@ -871,14 +883,42 @@ function addProgress(text) {
   return div;
 }
 
+// ── Simulate user typing character by character ──
+async function typeUserMessage(text) {
+  const t = CONFIG.timing;
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.style.whiteSpace = 'pre-line';
+  div.textContent = '';
+  msgBox.appendChild(div);
+  // Slide in immediately but empty
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    div.classList.add('show');
+    scroll();
+  }));
+  // Type character by character
+  for (let i = 0; i < text.length; i++) {
+    div.textContent = text.substring(0, i + 1);
+    scroll();
+    await sleep(t.userTypingSpeed);
+  }
+  return div;
+}
+
+// ── Count words in text ──
+function wordCount(text) {
+  return text.trim().split(/\s+/).length;
+}
+
 // ── Play a single scene ──
 async function playScene(scene) {
   const t = CONFIG.timing;
 
-  // User message
+  // User message — typed character by character
   if (scene.user) {
-    addBubble('user', scene.user);
     await sleep(t.userPause);
+    await typeUserMessage(scene.user);
+    await sleep(200);
 
     // Read receipt
     if (scene.readReceipt) {
@@ -919,10 +959,17 @@ async function playScene(scene) {
     removeTyping(typing);
   }
 
-  // Response bubbles — sequential
-  const gap = scene.responseGap || t.bubbleGap;
+  // Response bubbles — sequential with smart gaps
+  const baseGap = scene.responseGap || t.bubbleGap;
   for (const r of scene.responses) {
-    addBubble(r.style === 'decision' ? 'assistant' : 'assistant', r.text, r.style || '');
+    addBubble('assistant', r.text, r.style || '');
+
+    // Calculate gap: base + long bubble extra + decision/outreach pauses
+    let gap = baseGap;
+    if (wordCount(r.text) > 20) gap += t.longBubbleExtra;
+    if (r.style === 'decision') gap += t.decisionPause;
+    // Detect outreach draft (long single bubble with "Subject:")
+    if (r.text.startsWith('Subject:')) gap += t.outreachPause;
     await sleep(gap);
   }
 }
