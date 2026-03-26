@@ -7,9 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-/* =============================================================
-   DESIGN TOKENS
-   ============================================================= */
 :root {
   --color-bg:               #000000;
   --color-frame:            #1a1a1a;
@@ -25,26 +22,55 @@
   --color-text-muted:       #666666;
 }
 
-/* =============================================================
-   RESET + BASE
-   ============================================================= */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; }
 body {
   background: var(--color-bg);
   font-family: 'Inter', -apple-system, sans-serif;
   color: var(--color-text-primary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  position: relative;
 }
 
 /* =============================================================
-   FIX 4 — Blue glow behind phone
+   TWO-COLUMN LAYOUT
    ============================================================= */
+.layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Left column — phone */
+.col-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Right column — branding + controls */
+.col-right {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px 40px 40px 0;
+}
+
+/* =============================================================
+   PHONE FRAME
+   ============================================================= */
+.phone-wrap {
+  position: relative;
+  z-index: 1;
+  transform: scale(0.78);
+  transform-origin: center center;
+  transition: opacity 800ms ease;
+}
+.phone-wrap.fade-out { opacity: 0; }
+
 .phone-glow {
   position: absolute;
   top: 50%;
@@ -57,53 +83,6 @@ body {
   z-index: 0;
 }
 
-/* =============================================================
-   WORDMARK + CONTEXT LINE
-   ============================================================= */
-.wordmark {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  margin-bottom: 12px;
-  transition: opacity 600ms ease;
-}
-.wordmark.hidden { opacity: 0; }
-.wordmark-context {
-  font-size: 13px;
-  font-weight: 400;
-  color: #555555;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-  transition: opacity 600ms ease;
-}
-.wordmark-context.hidden { opacity: 0; }
-.wordmark-title {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-.wordmark-title .blue { color: var(--color-blue-light); }
-.wordmark-tagline {
-  font-size: 15px;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  margin-top: 4px;
-}
-
-/* =============================================================
-   iPHONE FRAME
-   ============================================================= */
-.phone-wrap {
-  position: relative;
-  z-index: 1;
-  transform: scale(0.78);
-  transform-origin: center top;
-  transition: opacity 800ms ease;
-}
-.phone-wrap.fade-out { opacity: 0; }
-/* Compensate for scale gap: 844 * (1 - 0.78) = ~186px of dead space below */
-.phone-wrap { margin-bottom: -186px; }
-
 .phone {
   position: relative;
   width: 390px;
@@ -114,7 +93,6 @@ body {
   box-shadow: 0 0 0 1px rgba(26,111,255,0.15), 0 40px 80px rgba(0,0,0,0.7);
 }
 
-/* FIX 5 — Side buttons */
 .side-btn { position: absolute; background: #2a2a2a; border-radius: 2px; }
 .side-btn.mute   { left: -3px; top: 155px; width: 3px; height: 32px; }
 .side-btn.vol-up { left: -3px; top: 205px; width: 3px; height: 56px; }
@@ -132,7 +110,7 @@ body {
   flex-direction: column;
 }
 
-/* 7AM lock screen overlay — full black takeover */
+/* Lock screen overlay with sunrise */
 .lock-overlay {
   position: absolute;
   inset: 0;
@@ -148,7 +126,25 @@ body {
   justify-content: center;
 }
 .lock-overlay.show { opacity: 1; pointer-events: auto; }
+/* Sunrise gradient layer */
+.lock-sunrise {
+  position: absolute;
+  inset: 0;
+  border-radius: 44px;
+  opacity: 0;
+  transition: opacity 2500ms ease-in-out;
+  background: linear-gradient(
+    to top,
+    rgba(255, 140, 30, 0.4) 0%,
+    rgba(255, 80, 20, 0.2) 20%,
+    rgba(20, 20, 80, 0.4) 50%,
+    rgba(5, 5, 20, 0.95) 100%
+  );
+}
+.lock-sunrise.show { opacity: 1; }
+
 .lock-overlay .lock-time {
+  position: relative; z-index: 2;
   font-size: 72px;
   font-weight: 300;
   letter-spacing: -2px;
@@ -158,6 +154,7 @@ body {
 }
 .lock-overlay .lock-time.visible { opacity: 1; }
 .lock-overlay .lock-date {
+  position: relative; z-index: 2;
   font-size: 16px;
   font-weight: 400;
   color: rgba(255,255,255,0.7);
@@ -166,7 +163,8 @@ body {
   transition: opacity 600ms ease;
 }
 .lock-overlay .lock-date.visible { opacity: 1; }
-/* Lock screen notification — centered card (iOS style) */
+
+/* Lock notification — centered card */
 .lock-notif {
   position: absolute;
   top: 50%;
@@ -184,10 +182,7 @@ body {
   opacity: 0;
   transition: opacity 400ms ease-out, transform 400ms ease-out;
 }
-.lock-notif.show {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
+.lock-notif.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .lock-notif.tap { animation: notifTap 250ms ease forwards; }
 .lock-notif.dismiss {
   opacity: 0;
@@ -207,52 +202,29 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 600; color: #fff; flex-shrink: 0;
 }
-.lock-notif .ln-app { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); }
+.lock-notif .ln-app { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); }
 .lock-notif .ln-time { font-size: 12px; color: rgba(255,255,255,0.35); margin-left: auto; }
 .lock-notif .ln-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 2px; }
 .lock-notif .ln-body { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.35; }
 
 .dynamic-island {
-  position: absolute;
-  top: 11px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 126px;
-  height: 36px;
-  background: #000;
-  border-radius: 20px;
-  z-index: 10;
+  position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+  width: 126px; height: 36px; background: #000; border-radius: 20px; z-index: 10;
 }
 
 .status-bar {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 28px 0;
-  height: 54px;
-  flex-shrink: 0;
+  position: relative; z-index: 5;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 28px 0; height: 54px; flex-shrink: 0;
 }
-.status-bar .sb-time {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  transition: opacity 300ms ease;
-}
+.status-bar .sb-time { font-size: 15px; font-weight: 600; color: #fff; transition: opacity 300ms ease; }
 .status-bar .sb-icons { display: flex; align-items: center; gap: 5px; }
 .status-bar .sb-icons svg { width: 16px; height: 16px; fill: #fff; }
 
-/* =============================================================
-   iMESSAGE HEADER
-   ============================================================= */
+/* iMessage header */
 .imsg-header {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px 10px;
-  background: #1c1c1e;
-  flex-shrink: 0;
-  gap: 10px;
+  display: flex; align-items: center; padding: 8px 16px 10px;
+  background: #1c1c1e; flex-shrink: 0; gap: 10px;
 }
 .imsg-back { font-size: 28px; color: var(--color-blue); font-weight: 300; line-height: 1; margin-right: 2px; }
 .imsg-badge { font-size: 16px; color: var(--color-blue); font-weight: 500; }
@@ -266,78 +238,43 @@ body {
 .imsg-video { flex-shrink: 0; opacity: 1; }
 .imsg-video svg { width: 24px; height: 24px; fill: var(--color-blue); }
 
-/* =============================================================
-   MESSAGE AREA
-   ============================================================= */
+/* Message area */
 .messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 14px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  scroll-behavior: smooth;
+  flex: 1; overflow-y: auto; padding: 12px 14px 8px;
+  display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth;
 }
 .messages::-webkit-scrollbar { width: 0; }
 
-.timestamp {
-  text-align: center;
-  font-size: 11px;
-  color: var(--color-text-muted);
-  padding: 8px 0 4px;
-}
+.timestamp { text-align: center; font-size: 11px; color: var(--color-text-muted); padding: 8px 0 4px; }
 .read-receipt {
-  text-align: right;
-  font-size: 11px;
-  color: var(--color-text-muted);
-  padding: 2px 4px 4px;
-  opacity: 0;
-  transition: opacity 200ms ease;
+  text-align: right; font-size: 11px; color: var(--color-text-muted);
+  padding: 2px 4px 4px; opacity: 0; transition: opacity 200ms ease;
 }
 .read-receipt.show { opacity: 1; }
 
-/* =============================================================
-   MESSAGE BUBBLES
-   ============================================================= */
+/* Bubbles */
 .msg {
-  max-width: 80%;
-  padding: 10px 14px;
-  font-size: 15px;
-  line-height: 1.45;
-  opacity: 0;
-  transform: translateY(8px);
-  font-weight: 400;
+  max-width: 80%; padding: 10px 14px; font-size: 15px;
+  line-height: 1.45; opacity: 0; transform: translateY(8px); font-weight: 400;
 }
 .msg.preloaded { opacity: 1; transform: none; }
 .msg.show { opacity: 1; transform: translateY(0); }
-
 .msg.user {
-  align-self: flex-end;
-  background: var(--color-bubble-user);
-  color: #fff;
-  border-radius: 18px 18px 4px 18px;
-  transform: translateX(20px);
+  align-self: flex-end; background: var(--color-bubble-user); color: #fff;
+  border-radius: 18px 18px 4px 18px; transform: translateX(20px);
 }
 .msg.user.preloaded { transform: none; }
 .msg.user.show { animation: slideInRight 200ms ease-out forwards; }
-
 .msg.assistant {
-  align-self: flex-start;
-  background: var(--color-bubble-assistant);
-  color: #fff;
+  align-self: flex-start; background: var(--color-bubble-assistant); color: #fff;
   border-radius: 18px 18px 18px 4px;
 }
 .msg.assistant.show { animation: fadeSlideUp 300ms ease-out forwards; }
 .msg.assistant.preloaded { opacity: 1; transform: none; }
-
 .msg.progress {
-  align-self: flex-start;
-  background: var(--color-bubble-progress);
-  color: var(--color-text-muted);
-  border-radius: 18px 18px 18px 4px;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 12px;
+  align-self: flex-start; background: var(--color-bubble-progress);
+  color: var(--color-text-muted); border-radius: 18px 18px 18px 4px;
+  font-size: 13px; font-weight: 500; padding: 8px 12px;
 }
 .msg.progress .spinner {
   display: inline-block; width: 10px; height: 10px;
@@ -352,42 +289,29 @@ body {
 .msg.progress.checked .spinner { display: none; }
 .msg.progress.checked .checkmark { display: inline; }
 .msg.progress.checked { color: var(--color-text-secondary); }
-
 .msg.decision {
-  align-self: flex-start;
-  max-width: 92%;
+  align-self: flex-start; max-width: 92%;
   background: linear-gradient(135deg, var(--color-bubble-decision-start), var(--color-bubble-decision-end));
-  border-left: 3px solid var(--color-blue);
-  border-radius: 18px 18px 18px 4px;
-  color: var(--color-blue-light);
-  font-size: 16px;
-  font-weight: 600;
-  padding: 12px 16px;
-  box-shadow: rgba(26,111,255,0.2) -4px 0px 16px;
+  border-left: 3px solid var(--color-blue); border-radius: 18px 18px 18px 4px;
+  color: var(--color-blue-light); font-size: 16px; font-weight: 600;
+  padding: 12px 16px; box-shadow: rgba(26,111,255,0.2) -4px 0px 16px;
 }
 
 .typing {
-  align-self: flex-start;
-  display: flex; gap: 4px;
-  padding: 12px 16px;
-  background: var(--color-bubble-assistant);
-  border-radius: 18px 18px 18px 4px;
-  opacity: 0;
+  align-self: flex-start; display: flex; gap: 4px; padding: 12px 16px;
+  background: var(--color-bubble-assistant); border-radius: 18px 18px 18px 4px; opacity: 0;
 }
 .typing.show { opacity: 1; }
 .typing span {
-  width: 7px; height: 7px; background: #555;
-  border-radius: 50%; animation: pulse 1.2s ease-in-out infinite;
+  width: 7px; height: 7px; background: #555; border-radius: 50%;
+  animation: pulse 1.2s ease-in-out infinite;
 }
 .typing span:nth-child(2) { animation-delay: 0.15s; }
 .typing span:nth-child(3) { animation-delay: 0.3s; }
 
-/* =============================================================
-   iMESSAGE INPUT
-   ============================================================= */
+/* iMessage input */
 .imsg-input {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px 28px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px 28px; flex-shrink: 0;
 }
 .imsg-plus {
   width: 28px; height: 28px; border-radius: 50%; background: #333;
@@ -410,36 +334,47 @@ body {
 }
 
 /* =============================================================
-   NOTIFICATION BANNER (inside phone screen)
+   RIGHT PANEL
    ============================================================= */
-.notif-banner {
-  position: absolute;
-  top: 54px; left: 12px; right: 12px;
-  z-index: 50;
-  background: rgba(20,20,20,0.9);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 12px 14px;
-  transform: translateY(-150%);
-  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+.brand-section {}
+.brand-wordmark { font-size: 28px; font-weight: 600; letter-spacing: -0.3px; }
+.brand-wordmark .blue { color: var(--color-blue-light); }
+.brand-tagline { font-size: 14px; font-weight: 400; color: var(--color-text-muted); margin-top: 4px; }
+
+/* Rotating stats */
+.stat-rotator { min-height: 100px; position: relative; }
+.stat-text {
+  font-size: 18px; font-weight: 400; color: #fff; line-height: 1.6;
+  max-width: 280px; transition: opacity 300ms ease;
 }
-.notif-banner.show { transform: translateY(0); }
-.notif-banner .nb-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.notif-banner .nb-icon {
-  width: 36px; height: 36px; border-radius: 8px;
-  background: linear-gradient(135deg, var(--color-blue), var(--color-blue-light));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 600; color: #fff; flex-shrink: 0;
+.stat-text.fade-out { opacity: 0; }
+
+/* Right panel buttons */
+.panel-btn {
+  display: block; width: 100%; padding: 14px 32px; border-radius: 999px;
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500;
+  cursor: pointer; transition: all 150ms; text-align: center;
 }
-.notif-banner .nb-app { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); }
-.notif-banner .nb-time { font-size: 12px; color: rgba(255,255,255,0.35); margin-left: auto; }
-.notif-banner .nb-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
-.notif-banner .nb-body { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.35; }
+.panel-btn.primary {
+  background: var(--color-blue); color: #fff; border: none;
+  box-shadow: rgba(26,111,255,0.2) 0px 6px 28px -1px, rgba(0,0,0,0.09) 0px 4px 9px 0px,
+    rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
+    rgba(0,20,80,0.25) -1px -1px 6px inset;
+}
+.panel-btn.primary:hover { transform: translateY(-1px); }
+.panel-btn.primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.panel-btn.ghost {
+  background: transparent; color: var(--color-blue); border: 1px solid var(--color-blue);
+  margin-top: 12px;
+}
+.panel-btn.ghost:hover { background: rgba(26,111,255,0.08); }
+
+.small-print {
+  margin-top: auto; font-size: 12px; font-weight: 400; color: #444;
+}
 
 /* =============================================================
-   CLOSING OVERLAY — FIX 2
+   CLOSING OVERLAY
    ============================================================= */
 #closingOverlay {
   position: fixed; inset: 0; z-index: 100;
@@ -455,10 +390,9 @@ body {
   font-size: 52px; font-weight: 600; letter-spacing: -0.92px;
   background: linear-gradient(135deg, #1a6fff, #4db8ff);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-top: 8px;
+  background-clip: text; margin-top: 8px;
 }
-.cl-sub { color: #999999; font-size: 18px; font-weight: 400; margin-top: 24px; max-width: 480px; text-align: center; }
+.cl-sub { color: #999; font-size: 18px; font-weight: 400; margin-top: 24px; max-width: 480px; text-align: center; }
 .cl-logo { font-size: 22px; font-weight: 600; margin-top: 24px; }
 .cl-logo .blue { color: var(--color-blue-light); }
 .cl-cta {
@@ -480,35 +414,6 @@ body {
 .cl-replay:hover { border-color: rgba(255,255,255,0.6); }
 
 /* =============================================================
-   CONTROLS
-   ============================================================= */
-.controls {
-  position: relative; z-index: 2;
-  margin-top: 20px; margin-bottom: 20px;
-  display: flex; gap: 10px;
-  transition: opacity 600ms ease;
-}
-.controls.hidden { opacity: 0; pointer-events: none; }
-.ctrl-btn {
-  padding: 10px 28px; border-radius: 999px; border: none;
-  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: all 150ms;
-  box-shadow: rgba(26,111,255,0.2) 0px 6px 28px -1px, rgba(0,0,0,0.09) 0px 4px 9px 0px,
-    rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
-    rgba(0,20,80,0.25) -1px -1px 6px inset;
-}
-.ctrl-btn.primary { background: var(--color-blue); color: #fff; }
-.ctrl-btn.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: rgba(26,111,255,0.35) 0px 6px 28px -1px, rgba(0,0,0,0.09) 0px 4px 9px 0px,
-    rgba(255,255,255,0.05) 0px 10px 32px inset, rgba(74,184,255,0.15) 2px 2px 2px inset,
-    rgba(0,20,80,0.25) -1px -1px 6px inset;
-}
-.ctrl-btn.secondary { background: #0a0a0a; color: var(--color-text-muted); }
-.ctrl-btn.secondary:hover { color: #fff; }
-.ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-
-/* =============================================================
    KEYFRAMES
    ============================================================= */
 @keyframes slideInRight {
@@ -525,114 +430,109 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Mobile responsive */
+/* =============================================================
+   MOBILE — stack layout
+   ============================================================= */
 @media (max-width: 768px) {
-  body {
-    justify-content: flex-start;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    overflow-y: auto;
-    min-height: 100dvh;
+  .layout { flex-direction: column; overflow-y: auto; height: auto; min-height: 100dvh; }
+  .col-left { min-height: auto; padding: 20px 0; }
+  .col-right {
+    width: 100%; padding: 0 24px 32px; align-items: center; text-align: center;
   }
-  .phone-wrap {
-    transform: scale(1.0);
-    transform-origin: center top;
-    margin-bottom: 0;
-  }
-  .wordmark { margin-bottom: 10px; }
-  .controls {
-    position: relative;
-    margin-top: 20px;
-    padding-bottom: 20px;
-  }
+  .phone-wrap { transform: scale(1.0); }
+  .stat-text { max-width: 100%; }
+  .panel-btn { max-width: 320px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Wordmark + context -->
-<div class="wordmark" id="wordmark">
-  <div class="wordmark-context" id="contextLine">It's 7:03 AM. SalesScout already found your prospects.</div>
-  <div class="wordmark-title">Sales<span class="blue">Scout</span></div>
-  <div class="wordmark-tagline">AI Sales Intelligence for Freight Brokers</div>
-</div>
-
-<!-- iPhone frame -->
-<div class="phone-wrap" id="phoneWrap">
-  <div class="phone-glow"></div>
-  <div class="phone">
-    <div class="side-btn mute"></div>
-    <div class="side-btn vol-up"></div>
-    <div class="side-btn vol-dn"></div>
-    <div class="side-btn power"></div>
-    <div class="screen">
-      <!-- 7AM lock screen overlay -->
-      <div class="lock-overlay" id="lockOverlay">
-        <div class="lock-time" id="lockTime">7:00</div>
-        <div class="lock-date" id="lockDate">Wednesday, March 26</div>
-        <div class="lock-notif" id="lockNotif">
-          <div class="ln-header">
-            <div class="ln-icon">FS</div>
-            <div><div class="ln-app">SalesScout</div></div>
-            <div class="ln-time">now</div>
+<div class="layout">
+  <!-- LEFT COLUMN — Phone -->
+  <div class="col-left">
+    <div class="phone-wrap" id="phoneWrap">
+      <div class="phone-glow"></div>
+      <div class="phone">
+        <div class="side-btn mute"></div>
+        <div class="side-btn vol-up"></div>
+        <div class="side-btn vol-dn"></div>
+        <div class="side-btn power"></div>
+        <div class="screen">
+          <div class="lock-overlay" id="lockOverlay">
+            <div class="lock-sunrise" id="lockSunrise"></div>
+            <div class="lock-time" id="lockTime">7:00</div>
+            <div class="lock-date" id="lockDate">Wednesday, March 26</div>
+            <div class="lock-notif" id="lockNotif">
+              <div class="ln-header">
+                <div class="ln-icon">FS</div>
+                <div><div class="ln-app">SalesScout</div></div>
+                <div class="ln-time">now</div>
+              </div>
+              <div class="ln-title">Good morning. 4 new prospects ready.</div>
+              <div class="ln-body">Your overnight research is waiting — tap to view.</div>
+            </div>
           </div>
-          <div class="ln-title">Good morning. 4 new prospects ready.</div>
-          <div class="ln-body">Your overnight research is waiting — tap to view.</div>
-        </div>
-      </div>
-      <div class="dynamic-island"></div>
-      <div class="status-bar">
-        <span class="sb-time" id="sbTime">9:41</span>
-        <span class="sb-icons">
-          <svg viewBox="0 0 20 12"><circle cx="2" cy="10" r="1.5"/><circle cx="6" cy="7" r="1.5"/><circle cx="10" cy="4" r="1.5"/><circle cx="14" cy="1.5" r="1.5" opacity="0.3"/></svg>
-          <svg viewBox="0 0 16 16"><path d="M1 5.5l1.5 1.5C5.3 4.2 10.7 4.2 13.5 7L15 5.5C11.4 1.9 4.6 1.9 1 5.5zm4 4l3 3 3-3a4.2 4.2 0 00-6 0zm-2-2l1.5 1.5a5.5 5.5 0 017 0L13 7.5C10.3 4.8 5.7 4.8 3 7.5z"/></svg>
-          <svg viewBox="0 0 28 14"><rect x="0.5" y="1" width="23" height="12" rx="3" stroke="#fff" stroke-width="1" fill="none" opacity="0.4"/><rect x="2" y="2.5" width="18" height="9" rx="1.5" fill="#fff"/><path d="M25 5v4a2 2 0 000-4z" fill="#fff" opacity="0.4"/></svg>
-        </span>
-      </div>
-      <div class="imsg-header">
-        <span class="imsg-back">&#x2039;</span>
-        <span class="imsg-badge">9</span>
-        <div class="imsg-avatar">S</div>
-        <div class="imsg-name">SalesScout</div>
-        <div class="imsg-video">
-          <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
-        </div>
-      </div>
-      <!-- Notification banner -->
-      <div class="notif-banner" id="notifBanner">
-        <div class="nb-header">
-          <div class="nb-icon">FS</div>
-          <div><div class="nb-app">SalesScout</div></div>
-          <div class="nb-time">now</div>
-        </div>
-        <div class="nb-title" id="nbTitle"></div>
-        <div class="nb-body" id="nbBody"></div>
-      </div>
-      <div class="messages" id="messages">
-        <!-- FIX 1: Pre-loaded messages visible on page load (static HTML) -->
-        <div class="timestamp">Yesterday 4:23 PM</div>
-        <div class="msg user preloaded" style="white-space:pre-line">Brief House of Raeford Farms</div>
-        <div class="msg assistant preloaded" style="white-space:pre-line">PURSUE NOW &#x2014; brief and outreach draft saved to your morning list.</div>
-        <div class="timestamp">Yesterday 4:24 PM</div>
-        <div class="msg user preloaded" style="white-space:pre-line">draft outreach for House of Raeford</div>
-        <div class="msg assistant preloaded" style="white-space:pre-line">Subject: Capacity partner for your Southeast expansion
+          <div class="dynamic-island"></div>
+          <div class="status-bar">
+            <span class="sb-time" id="sbTime">9:41</span>
+            <span class="sb-icons">
+              <svg viewBox="0 0 20 12"><circle cx="2" cy="10" r="1.5"/><circle cx="6" cy="7" r="1.5"/><circle cx="10" cy="4" r="1.5"/><circle cx="14" cy="1.5" r="1.5" opacity="0.3"/></svg>
+              <svg viewBox="0 0 16 16"><path d="M1 5.5l1.5 1.5C5.3 4.2 10.7 4.2 13.5 7L15 5.5C11.4 1.9 4.6 1.9 1 5.5zm4 4l3 3 3-3a4.2 4.2 0 00-6 0zm-2-2l1.5 1.5a5.5 5.5 0 017 0L13 7.5C10.3 4.8 5.7 4.8 3 7.5z"/></svg>
+              <svg viewBox="0 0 28 14"><rect x="0.5" y="1" width="23" height="12" rx="3" stroke="#fff" stroke-width="1" fill="none" opacity="0.4"/><rect x="2" y="2.5" width="18" height="9" rx="1.5" fill="#fff"/><path d="M25 5v4a2 2 0 000-4z" fill="#fff" opacity="0.4"/></svg>
+            </span>
+          </div>
+          <div class="imsg-header">
+            <span class="imsg-back">&#x2039;</span>
+            <span class="imsg-badge">9</span>
+            <div class="imsg-avatar">S</div>
+            <div class="imsg-name">SalesScout</div>
+            <div class="imsg-video">
+              <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+            </div>
+          </div>
+          <div class="messages" id="messages">
+            <!-- Static pre-loaded messages -->
+            <div class="timestamp">Yesterday 4:23 PM</div>
+            <div class="msg user preloaded" style="white-space:pre-line">Brief House of Raeford Farms</div>
+            <div class="msg assistant preloaded" style="white-space:pre-line">PURSUE NOW &#x2014; brief and outreach draft saved to your morning list.</div>
+            <div class="timestamp">Yesterday 4:24 PM</div>
+            <div class="msg user preloaded" style="white-space:pre-line">draft outreach for House of Raeford</div>
+            <div class="msg assistant preloaded" style="white-space:pre-line">Subject: Capacity partner for your Southeast expansion
 
 Saw House of Raeford expanding regional processing operations.
 
 When volume ramps that fast across multiple facilities, I&#x2019;m curious &#x2014; are your current capacity partners keeping up, or is that starting to create some pressure?
 
 Worth a quick conversation?</div>
-        <div class="timestamp">Today 9:41 AM</div>
-      </div>
-      <div class="imsg-input">
-        <div class="imsg-plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div class="imsg-field">
-          <span>iMessage</span>
-          <div class="imsg-mic"><svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 00-4 4v6a4 4 0 008 0V5a4 4 0 00-4-4zm7 10a7 7 0 01-14 0H3a9 9 0 0017.94 1H21a7 7 0 010-1zm-7 9v3m-3 0h6"/></svg></div>
+            <div class="timestamp">Today 9:41 AM</div>
+          </div>
+          <div class="imsg-input">
+            <div class="imsg-plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <div class="imsg-field">
+              <span>iMessage</span>
+              <div class="imsg-mic"><svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 00-4 4v6a4 4 0 008 0V5a4 4 0 00-4-4zm7 10a7 7 0 01-14 0H3a9 9 0 0017.94 1H21a7 7 0 010-1zm-7 9v3m-3 0h6"/></svg></div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
         </div>
       </div>
-      <div class="home-indicator"></div>
     </div>
+  </div>
+
+  <!-- RIGHT COLUMN — Branding + Controls -->
+  <div class="col-right" id="rightPanel">
+    <div class="brand-section">
+      <div class="brand-wordmark">Sales<span class="blue">Scout</span></div>
+      <div class="brand-tagline">AI Sales Intelligence for Freight Brokers</div>
+    </div>
+    <div class="stat-rotator">
+      <div class="stat-text" id="statText"></div>
+    </div>
+    <div>
+      <button class="panel-btn primary" id="startBtn">Start Demo</button>
+      <button class="panel-btn ghost" id="earlyAccessBtn">Get Early Access</button>
+    </div>
+    <div class="small-print">Founding member pricing: $500/mo</div>
   </div>
 </div>
 
@@ -646,58 +546,42 @@ Worth a quick conversation?</div>
   <button class="cl-replay" id="watchAgain">Watch Again</button>
 </div>
 
-<!-- Controls -->
-<div class="controls" id="controls">
-  <button class="ctrl-btn primary" id="startBtn">Start Demo</button>
-  <button class="ctrl-btn secondary" id="replayBtn" disabled>Replay</button>
-</div>
-
 <script>
 // =============================================================
-// CONFIG — All demo content, timing, and scene data
+// CONFIG
 // =============================================================
 const CONFIG = {
-
-  // ── Timing (ms) ──
   timing: {
-    typingMin:            800,   // typing indicator before assistant response
-    userTypingSpeed:       15,   // ms per character for user typing sim
-    userTypingCap:        600,   // hard cap on total user typing time
-    progressGap:          800,   // gap between progress bubbles
-    bubbleGap:           1200,   // gap between assistant response bubbles
-    sceneGap:            1800,   // pause between major scenes
-    userPause:            400,   // pause before user starts typing
-    readReceiptDelay:     800,   // delay before "Read" shows
-    checkmarkGap:         200,   // gap between progress checkmark swaps
-    checkmarkPause:       400,   // pause after checkmarks before responses
-    decisionPause:       1200,   // extra pause after PURSUE NOW (FIX 2)
-    outreachPause:       8000,   // extra pause after outreach draft (FIX 3)
-    vibrantHealthPause:  3000,   // extra pause after Vibrant Health data bubble (FIX 2)
-    pipelineBubbleGap:   1500,   // gap for pipeline response bubbles
-    longBubbleExtra:      800,   // extra ms for bubbles >20 words
-    notificationHold:    4000,   // 7AM lock screen notification hold
-    sevenAmBubbleGap:    1800,   // gap between overnight research bubbles
-    silenceAfterBriefs:  2000,   // silence after "Ready to brief" before fade (FIX 7)
-    preSevenAmPause:      500,   // pause before 7AM sequence starts (FIX 5)
-    screenDimFade:        800,   // screen dim fade duration (CSS)
-    clockFade:            600,   // clock text swap fade
-    screenUndim:          400,   // screen undim duration
-    phoneFadeOut:         800,   // phone fade before closing
-    closingHold:         4000,   // closing card hold
+    typingMin:            800,
+    userTypingSpeed:       15,
+    userTypingCap:        600,
+    progressGap:          800,
+    bubbleGap:           1200,
+    sceneGap:            1800,
+    userPause:            400,
+    readReceiptDelay:     800,
+    checkmarkGap:         200,
+    checkmarkPause:       400,
+    decisionPause:       1200,
+    outreachPause:       8000,
+    vibrantHealthPause:  3000,
+    pipelineBubbleGap:   1500,
+    longBubbleExtra:      800,
+    notificationHold:    4000,
+    sevenAmBubbleGap:    1800,
+    silenceAfterBriefs:  2000,
+    preSevenAmPause:      500,
+    phoneFadeOut:         800,
+    closingHold:         4000,
   },
 
-  // ── FIX 6 — Pre-loaded messages ──
-  preloaded: [
-    { type: 'user', text: 'Brief House of Raeford Farms' },
-    { type: 'timestamp', text: 'Yesterday 4:23 PM' },
-    { type: 'assistant', text: 'PURSUE NOW \u2014 brief and outreach draft saved to your morning list.' },
-    { type: 'timestamp', text: 'Yesterday 4:24 PM' },
-    { type: 'timestamp', text: 'Today 9:41 AM' },
+  fomoStats: [
+    'The average sales rep spends 70% of their day doing work that doesn\u2019t close deals.',
+    'Top performers don\u2019t work harder. They just know more, faster.',
+    'Your next best account already has an open decision window. You just don\u2019t know it yet.',
   ],
 
-  // ── FIX 7 — Scene content ──
   scenes: [
-    // SCENE 1 — The Query
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
       readReceipt: true,
@@ -714,8 +598,6 @@ const CONFIG = {
         { text: '\u26a1 Decision: PURSUE NOW', style: 'decision' },
       ],
     },
-
-    // SCENE 2 — Outreach Draft
     {
       user: 'draft outreach for Vibrant Health',
       readReceipt: true,
@@ -724,8 +606,6 @@ const CONFIG = {
         { text: 'Subject: Freight partner for your Rossville launch\n\nSaw Vibrant Health is standing up your first US facility this quarter in Rossville.\n\nWhen a brand is building a supply chain from scratch, the freight decisions made in the first 90 days tend to stick. I\u2019m curious \u2014 do you have a Southeast carrier partner locked in yet, or is that still coming together?\n\nWe specialize in food/bev and organic CPG freight out of Jacksonville. Have helped similar brands nail the launch window without scrambling for capacity at the worst time.\n\nWorth a quick conversation?', extraPause: 'outreach' },
       ],
     },
-
-    // SCENE 3 — Prospect Discovery (FIX 4: tighter bubble gap)
     {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
@@ -738,8 +618,6 @@ const CONFIG = {
         { text: 'Danone \u2014 Jacksonville FL\n$65M production line opened June 2025\nScore: 8.7 \u2014 Pursue Now' },
       ],
     },
-
-    // SCENE 4 — Pipeline
     {
       user: 'pursue Vibrant Health and Fine Organics',
       readReceipt: true,
@@ -753,7 +631,6 @@ const CONFIG = {
     },
   ],
 
-  // ── FIX 1 — 7AM Climax content ──
   sevenAm: {
     notifTitle: 'Good morning. 4 new prospects ready.',
     notifBody: 'Your overnight research is waiting \u2014 tap to view.',
@@ -781,26 +658,35 @@ const CONFIG = {
 const $ = s => document.querySelector(s);
 const msgBox       = $('#messages');
 const startBtn     = $('#startBtn');
-const replayBtn    = $('#replayBtn');
 const phoneWrap    = $('#phoneWrap');
-const wordmark     = $('#wordmark');
-const contextLine  = $('#contextLine');
-const controls     = $('#controls');
+const rightPanel   = $('#rightPanel');
 const closingOv    = $('#closingOverlay');
-const notifBanner  = $('#notifBanner');
 const lockOverlay  = $('#lockOverlay');
+const lockSunrise  = $('#lockSunrise');
 const lockTime     = $('#lockTime');
 const lockDate     = $('#lockDate');
 const lockNotif    = $('#lockNotif');
 const sbTime       = $('#sbTime');
+const statText     = $('#statText');
 let running = false;
 
 startBtn.addEventListener('click', () => runDemo());
-replayBtn.addEventListener('click', () => runDemo());
 $('#watchAgain').addEventListener('click', () => { running = false; runDemo(); });
 
-// Auto-scroll to bottom on page load so "Today 9:41 AM" is visible
+// Auto-scroll to bottom on page load
 requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
+
+// Rotating FOMO stats
+let statIdx = 0;
+statText.textContent = CONFIG.fomoStats[0];
+setInterval(() => {
+  statText.classList.add('fade-out');
+  setTimeout(() => {
+    statIdx = (statIdx + 1) % CONFIG.fomoStats.length;
+    statText.textContent = CONFIG.fomoStats[statIdx];
+    statText.classList.remove('fade-out');
+  }, 300);
+}, 4000);
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function scroll() { msgBox.scrollTop = msgBox.scrollHeight; }
@@ -841,7 +727,6 @@ function addReadReceipt() {
   return div;
 }
 
-// FIX 9 — Typing dots with organic randomness
 function showTyping() {
   const div = document.createElement('div');
   div.className = 'typing';
@@ -850,9 +735,7 @@ function showTyping() {
   const d3 = document.createElement('span');
   d2.style.animationDelay = (0.18 + Math.random() * 0.04).toFixed(3) + 's';
   d3.style.animationDelay = (0.36 + Math.random() * 0.04).toFixed(3) + 's';
-  div.appendChild(d1);
-  div.appendChild(d2);
-  div.appendChild(d3);
+  div.appendChild(d1); div.appendChild(d2); div.appendChild(d3);
   msgBox.appendChild(div);
   requestAnimationFrame(() => { div.classList.add('show'); scroll(); });
   return div;
@@ -867,14 +750,10 @@ function addProgress(text) {
   span.textContent = text;
   div.appendChild(span);
   msgBox.appendChild(div);
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    div.classList.add('show');
-    scroll();
-  }));
+  requestAnimationFrame(() => requestAnimationFrame(() => { div.classList.add('show'); scroll(); }));
   return div;
 }
 
-// User typing simulation — capped at userTypingCap
 async function typeUserMessage(text) {
   const t = CONFIG.timing;
   const div = document.createElement('div');
@@ -882,11 +761,7 @@ async function typeUserMessage(text) {
   div.style.whiteSpace = 'pre-line';
   div.textContent = '';
   msgBox.appendChild(div);
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    div.classList.add('show');
-    scroll();
-  }));
-  // FIX 9: 50ms delay before first character to prevent flash
+  requestAnimationFrame(() => requestAnimationFrame(() => { div.classList.add('show'); scroll(); }));
   await sleep(50);
   const totalTime = Math.min(text.length * t.userTypingSpeed, t.userTypingCap);
   const perChar = totalTime / text.length;
@@ -898,11 +773,8 @@ async function typeUserMessage(text) {
   return div;
 }
 
-// Play a scene
 async function playScene(scene) {
   const t = CONFIG.timing;
-
-  // User types message
   if (scene.user) {
     await sleep(t.userPause);
     await typeUserMessage(scene.user);
@@ -914,38 +786,25 @@ async function playScene(scene) {
     }
     await sleep(200);
   }
-
-  // Typing before progress
   if (scene.progress.length > 0) {
     const typing = showTyping();
     await sleep(t.typingMin);
     removeTyping(typing);
   }
-
-  // Progress bubbles
   const progressEls = [];
   for (const p of scene.progress) {
     progressEls.push(addProgress(p));
     await sleep(t.progressGap);
   }
-
-  // Checkmarks
   if (progressEls.length > 0 && scene.responses.length > 0) {
-    for (const el of progressEls) {
-      el.classList.add('checked');
-      await sleep(t.checkmarkGap);
-    }
+    for (const el of progressEls) { el.classList.add('checked'); await sleep(t.checkmarkGap); }
     await sleep(t.checkmarkPause);
   }
-
-  // Typing if no progress
   if (scene.progress.length === 0 && scene.responses.length > 0) {
     const typing = showTyping();
     await sleep(t.typingMin);
     removeTyping(typing);
   }
-
-  // Response bubbles with smart gaps
   const baseGap = scene.responseGap || t.bubbleGap;
   for (const r of scene.responses) {
     addBubble('assistant', r.text, r.style || '');
@@ -958,118 +817,86 @@ async function playScene(scene) {
   }
 }
 
-// 7AM CLIMAX SEQUENCE — FIX 1 + FIX 2 + FIX 7
 async function playSevenAm() {
   const t = CONFIG.timing;
   const sa = CONFIG.sevenAm;
 
-  // Step 2: Phone screen fades to black (1000ms)
+  // Fade to black
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
-  lockNotif.classList.remove('show', 'tap');
+  lockNotif.classList.remove('show', 'tap', 'dismiss');
+  lockSunrise.classList.remove('show');
   lockOverlay.classList.add('show');
   await sleep(1000);
 
-  // Black screen holds 1000ms (FIX 6: keep total under 10s)
-  await sleep(1000);
+  // Hold black, then start sunrise
+  await sleep(800);
+  lockSunrise.classList.add('show'); // 2500ms transition
+  await sleep(200);
 
-  // Step 3: Clock + date fade in (600ms)
+  // Clock + date fade in over sunrise
   lockTime.classList.add('visible');
   lockDate.classList.add('visible');
   await sleep(600);
-
-  // FIX 2: Clock holds 2000ms
   await sleep(2000);
 
-  // Step 5: Notification drops — holds 4000ms
+  // Notification card
   lockNotif.classList.add('show');
   await sleep(t.notificationHold);
 
-  // Step 6: Tap animation 250ms
+  // Tap
   lockNotif.classList.add('tap');
   await sleep(250);
-
-  // Dismiss notification with scale-down fade
   lockNotif.classList.remove('show');
   lockNotif.classList.add('dismiss');
   await sleep(300);
 
-  // FIX 7: Update status bar clock BEFORE lock screen fades
+  // Update clock before fade
   sbTime.textContent = '7:00';
 
-  // Step 7: Lock screen fades out (400ms) — reveals chat
+  // Fade lock screen out
   lockOverlay.classList.remove('show');
   await sleep(400);
 
-  // FIX 1: Overnight bubbles animate in SEQUENTIALLY
-  // 500ms pause after fade
+  // Overnight bubbles
   await sleep(500);
-
-  // Add "Today 7:00 AM" timestamp
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-
-  // Animate each bubble in one by one with 1800ms gaps
   for (const text of sa.bubbles) {
-    addBubble('assistant', text);  // NOT preloaded — animates in
+    addBubble('assistant', text);
     await sleep(t.sevenAmBubbleGap);
   }
 
-  // Step 9: 4000ms silence — the feature
+  // Silence
   await sleep(t.silenceAfterBriefs);
 
-  // Step 10: Fade phone out 800ms — COMPLETE before closing card
+  // Fade phone
   phoneWrap.classList.add('fade-out');
-  wordmark.classList.add('hidden');
-  controls.classList.add('hidden');
   await sleep(t.phoneFadeOut);
-  // Ensure phone is fully gone
   await sleep(100);
 }
 
-// CLOSING CARD — fade in AFTER phone is fully gone (BUG 2 fix)
 async function playClosing() {
-  const t = CONFIG.timing;
-  // Phone is already fully faded at this point
   closingOv.classList.add('show');
-  await sleep(600); // wait for closing fade-in to complete
-
-  // Enable replay immediately so viewer can restart during hold
+  await sleep(600);
   running = false;
   startBtn.disabled = false;
-  replayBtn.disabled = false;
-
-  await sleep(t.closingHold - 600);
+  await sleep(CONFIG.timing.closingHold - 600);
 }
 
-function loadPreloaded() {
-  for (const m of CONFIG.preloaded) {
-    if (m.type === 'timestamp') {
-      addTimestamp(m.text);
-    } else {
-      addBubble(m.type, m.text, '', true);
-    }
-  }
-}
-
-// Store the original static HTML so we can restore on replay
 const staticMessages = msgBox.innerHTML;
 
 function resetAll() {
-  // Restore static pre-loaded messages (don't clear them)
   msgBox.innerHTML = staticMessages;
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
-  wordmark.classList.remove('hidden');
-  controls.classList.remove('hidden');
-  notifBanner.classList.remove('show');
   lockOverlay.classList.remove('show');
+  lockSunrise.classList.remove('show');
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
   lockNotif.classList.remove('show', 'tap', 'dismiss');
   sbTime.textContent = '9:41';
   sbTime.style.opacity = '1';
-  // Scroll to bottom so "Today 9:41 AM" is visible
   requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
 }
 
@@ -1077,34 +904,22 @@ async function runDemo() {
   if (running) return;
   running = true;
   startBtn.disabled = true;
-  replayBtn.disabled = true;
 
-  // Reset everything
   resetAll();
-
-  // Fade context line
-  contextLine.classList.add('hidden');
-
-  // Static messages already in HTML — scroll to bottom and start
   msgBox.scrollTop = msgBox.scrollHeight;
   await sleep(800);
 
-  // Play scenes 1-4 (FIX 5: last scene gets shorter gap before 7AM)
   for (let i = 0; i < CONFIG.scenes.length; i++) {
     await playScene(CONFIG.scenes[i]);
-    const isLastScene = (i === CONFIG.scenes.length - 1);
-    await sleep(isLastScene ? CONFIG.timing.preSevenAmPause : CONFIG.timing.sceneGap);
+    const isLast = (i === CONFIG.scenes.length - 1);
+    await sleep(isLast ? CONFIG.timing.preSevenAmPause : CONFIG.timing.sceneGap);
   }
 
-  // 7AM climax sequence
   await playSevenAm();
-
-  // Closing card
   await playClosing();
 
   running = false;
   startBtn.disabled = false;
-  replayBtn.disabled = false;
   startBtn.textContent = 'Start Demo';
 }
 </script>
