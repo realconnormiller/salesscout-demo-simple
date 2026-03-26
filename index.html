@@ -96,11 +96,13 @@ body {
 .phone-wrap {
   position: relative;
   z-index: 1;
-  transform: scale(0.85);
-  transform-origin: center center;
+  transform: scale(0.78);
+  transform-origin: center top;
   transition: opacity 800ms ease;
 }
 .phone-wrap.fade-out { opacity: 0; }
+/* Compensate for scale gap: 844 * (1 - 0.78) = ~186px of dead space below */
+.phone-wrap { margin-bottom: -186px; }
 
 .phone {
   position: relative;
@@ -482,7 +484,7 @@ body {
    ============================================================= */
 .controls {
   position: relative; z-index: 2;
-  margin-top: 40px; margin-bottom: 40px;
+  margin-top: 20px; margin-bottom: 20px;
   display: flex; gap: 10px;
   transition: opacity 600ms ease;
 }
