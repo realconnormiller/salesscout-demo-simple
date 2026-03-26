@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>SalesScout — AI Sales Intelligence for Freight Brokers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -524,6 +524,28 @@ body {
   40% { transform: scale(1.1); opacity: 1; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  body {
+    justify-content: flex-start;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    overflow-y: auto;
+    min-height: 100dvh;
+  }
+  .phone-wrap {
+    transform: scale(1.0);
+    transform-origin: center top;
+    margin-bottom: 0;
+  }
+  .wordmark { margin-bottom: 10px; }
+  .controls {
+    position: relative;
+    margin-top: 20px;
+    padding-bottom: 20px;
+  }
+}
 </style>
 </head>
 <body>
