@@ -578,7 +578,22 @@ body {
         <div class="nb-title" id="nbTitle"></div>
         <div class="nb-body" id="nbBody"></div>
       </div>
-      <div class="messages" id="messages"></div>
+      <div class="messages" id="messages">
+        <!-- FIX 1: Pre-loaded messages visible on page load (static HTML) -->
+        <div class="timestamp">Yesterday 4:23 PM</div>
+        <div class="msg user preloaded" style="white-space:pre-line">Brief House of Raeford Farms</div>
+        <div class="msg assistant preloaded" style="white-space:pre-line">PURSUE NOW &#x2014; brief and outreach draft saved to your morning list.</div>
+        <div class="timestamp">Yesterday 4:24 PM</div>
+        <div class="msg user preloaded" style="white-space:pre-line">draft outreach for House of Raeford</div>
+        <div class="msg assistant preloaded" style="white-space:pre-line">Subject: Capacity partner for your Southeast expansion
+
+Saw House of Raeford expanding regional processing operations.
+
+When volume ramps that fast across multiple facilities, I&#x2019;m curious &#x2014; are your current capacity partners keeping up, or is that starting to create some pressure?
+
+Worth a quick conversation?</div>
+        <div class="timestamp">Today 9:41 AM</div>
+      </div>
       <div class="imsg-input">
         <div class="imsg-plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div class="imsg-field">
@@ -750,6 +765,9 @@ let running = false;
 
 startBtn.addEventListener('click', () => runDemo());
 replayBtn.addEventListener('click', () => runDemo());
+
+// Auto-scroll to bottom on page load so "Today 9:41 AM" is visible
+requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function scroll() { msgBox.scrollTop = msgBox.scrollHeight; }
@@ -998,8 +1016,12 @@ function loadPreloaded() {
   }
 }
 
+// Store the original static HTML so we can restore on replay
+const staticMessages = msgBox.innerHTML;
+
 function resetAll() {
-  msgBox.innerHTML = '';
+  // Restore static pre-loaded messages (don't clear them)
+  msgBox.innerHTML = staticMessages;
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
   wordmark.classList.remove('hidden');
@@ -1011,6 +1033,8 @@ function resetAll() {
   lockNotif.classList.remove('show', 'tap', 'dismiss');
   sbTime.textContent = '9:41';
   sbTime.style.opacity = '1';
+  // Scroll to bottom so "Today 9:41 AM" is visible
+  requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
 }
 
 async function runDemo() {
@@ -1025,8 +1049,8 @@ async function runDemo() {
   // Fade context line
   contextLine.classList.add('hidden');
 
-  // Load pre-loaded messages
-  loadPreloaded();
+  // Static messages already in HTML — scroll to bottom and start
+  msgBox.scrollTop = msgBox.scrollHeight;
   await sleep(800);
 
   // Play scenes 1-4 (FIX 5: last scene gets shorter gap before 7AM)
