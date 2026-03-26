@@ -126,41 +126,46 @@ body {
   justify-content: center;
 }
 .lock-overlay.show { opacity: 1; pointer-events: auto; }
-/* Sunrise gradient layer */
-.lock-sunrise {
-  position: absolute;
-  inset: 0;
-  border-radius: 44px;
-  opacity: 0;
-  transition: opacity 2500ms ease-in-out;
-  background: linear-gradient(
-    to top,
-    rgba(255, 140, 30, 0.4) 0%,
-    rgba(255, 80, 20, 0.2) 20%,
-    rgba(20, 20, 80, 0.4) 50%,
-    rgba(5, 5, 20, 0.95) 100%
-  );
+/* Sky gradient — animated via JS class swaps */
+.lock-sky {
+  position: absolute; inset: 0; border-radius: 44px;
+  background: #000; transition: background 800ms ease-in-out;
 }
-.lock-sunrise.show { opacity: 1; }
+.lock-sky.phase-early {
+  background: linear-gradient(to top, #1a0a00 0%, #0a0a20 40%, #000010 100%);
+}
+.lock-sky.phase-peak {
+  background: linear-gradient(to top, #ff6b1a 0%, #ff3d00 8%, #cc2200 15%, #4a1a40 30%, #0a0a40 55%, #0a1a6f 80%, #1a3a8f 100%);
+  transition: background 800ms ease-in-out;
+}
+.lock-sky.phase-morning {
+  background: linear-gradient(to top, #87ceeb 0%, #b8d9f0 30%, #d4eaf7 60%, #e8f4fc 100%);
+  transition: background 200ms ease;
+}
+
+/* Sun orb */
+.sun-orb {
+  position: absolute; z-index: 1; pointer-events: none;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,220,100,0.95) 0%, rgba(255,160,30,0.6) 30%, rgba(255,100,20,0) 70%);
+  box-shadow: 0 0 60px 30px rgba(255,140,30,0.4), 0 0 120px 60px rgba(255,80,10,0.2);
+  opacity: 0; transition: opacity 300ms ease;
+  /* Start position: bottom-left, will be animated via JS */
+  left: -20px; bottom: -20px;
+}
+.sun-orb.visible { opacity: 1; }
 
 .lock-overlay .lock-time {
   position: relative; z-index: 2;
-  font-size: 72px;
-  font-weight: 300;
-  letter-spacing: -2px;
-  color: #fff;
-  opacity: 0;
-  transition: opacity 600ms ease;
+  font-size: 72px; font-weight: 300; letter-spacing: -2px;
+  color: #1a2a3a; opacity: 0; transition: opacity 600ms ease;
 }
 .lock-overlay .lock-time.visible { opacity: 1; }
 .lock-overlay .lock-date {
   position: relative; z-index: 2;
-  font-size: 16px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.7);
-  margin-top: 4px;
-  opacity: 0;
-  transition: opacity 600ms ease;
+  font-size: 16px; font-weight: 400;
+  color: rgba(26,42,58,0.7); margin-top: 4px;
+  opacity: 0; transition: opacity 600ms ease;
 }
 .lock-overlay .lock-date.visible { opacity: 1; }
 
@@ -202,10 +207,17 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 600; color: #fff; flex-shrink: 0;
 }
-.lock-notif .ln-app { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); }
-.lock-notif .ln-time { font-size: 12px; color: rgba(255,255,255,0.35); margin-left: auto; }
-.lock-notif .ln-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 2px; }
-.lock-notif .ln-body { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.35; }
+.lock-notif .ln-app { font-size: 13px; font-weight: 500; color: #333; }
+.lock-notif .ln-time { font-size: 12px; color: #888; margin-left: auto; }
+.lock-notif .ln-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+.lock-notif .ln-body { font-size: 13px; color: #444; line-height: 1.35; }
+
+/* Light mode notification for morning sky */
+.lock-notif.light {
+  background: rgba(240,245,250,0.92);
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: rgba(0,0,0,0.15) 0px 8px 32px;
+}
 
 .dynamic-island {
   position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
@@ -516,7 +528,8 @@ body {
         <div class="side-btn power"></div>
         <div class="screen">
           <div class="lock-overlay" id="lockOverlay">
-            <div class="lock-sunrise" id="lockSunrise"></div>
+            <div class="lock-sky" id="lockSky"></div>
+            <div class="sun-orb" id="sunOrb"></div>
             <div class="lock-time" id="lockTime">7:00</div>
             <div class="lock-date" id="lockDate">Wednesday, March 26</div>
             <div class="lock-notif" id="lockNotif">
@@ -719,7 +732,8 @@ const phoneWrap    = $('#phoneWrap');
 const rightPanel   = $('#rightPanel');
 const closingOv    = $('#closingOverlay');
 const lockOverlay  = $('#lockOverlay');
-const lockSunrise  = $('#lockSunrise');
+const lockSky      = $('#lockSky');
+const sunOrb       = $('#sunOrb');
 const lockTime     = $('#lockTime');
 const lockDate     = $('#lockDate');
 const lockNotif    = $('#lockNotif');
@@ -874,44 +888,102 @@ async function playScene(scene) {
   }
 }
 
+// Sun orb arc animation via requestAnimationFrame
+function animateSunOrb(durationMs) {
+  return new Promise(resolve => {
+    const start = performance.now();
+    // Arc keyframes: [time%, left%, bottom%, size]
+    const path = [
+      [0,   -5,  -3,  120],
+      [0.30, 15,  25,  110],
+      [0.60, 40,  55,  95],
+      [0.90, 65,  75,  85],
+      [1.0,  85,  88,  80],
+    ];
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function getPoint(p) {
+      // Ease: cubic-bezier approximation
+      const t = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+      for (let i = 0; i < path.length - 1; i++) {
+        if (t >= path[i][0] && t <= path[i + 1][0]) {
+          const seg = (t - path[i][0]) / (path[i + 1][0] - path[i][0]);
+          return {
+            left: lerp(path[i][1], path[i + 1][1], seg),
+            bottom: lerp(path[i][2], path[i + 1][2], seg),
+            size: lerp(path[i][3], path[i + 1][3], seg),
+          };
+        }
+      }
+      const last = path[path.length - 1];
+      return { left: last[1], bottom: last[2], size: last[3] };
+    }
+    function tick(now) {
+      const elapsed = now - start;
+      const p = Math.min(elapsed / durationMs, 1);
+      const pt = getPoint(p);
+      sunOrb.style.left = pt.left + '%';
+      sunOrb.style.bottom = pt.bottom + '%';
+      sunOrb.style.width = pt.size + 'px';
+      sunOrb.style.height = pt.size + 'px';
+      if (p < 1) requestAnimationFrame(tick);
+      else resolve();
+    }
+    sunOrb.classList.add('visible');
+    requestAnimationFrame(tick);
+  });
+}
+
 async function playSevenAm() {
   const t = CONFIG.timing;
   const sa = CONFIG.sevenAm;
 
-  // Fade to black
+  // STEP 1: Reset and fade to black
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
-  lockNotif.classList.remove('show', 'tap', 'dismiss');
-  lockSunrise.classList.remove('show');
+  lockNotif.classList.remove('show', 'tap', 'dismiss', 'light');
+  lockSky.className = 'lock-sky';
+  sunOrb.classList.remove('visible');
+  sunOrb.style.left = '-20px'; sunOrb.style.bottom = '-20px';
   lockOverlay.classList.add('show');
   await sleep(1000);
 
-  // Hold black, then start sunrise
+  // STEP 2: Sunrise time lapse (2000ms)
+  // Phase 1: early dawn (0-800ms)
+  lockSky.classList.add('phase-early');
+  const sunPromise = animateSunOrb(2000);
   await sleep(800);
-  lockSunrise.classList.add('show'); // 2500ms transition
+  // Phase 2: peak sunrise (800-1600ms)
+  lockSky.classList.remove('phase-early');
+  lockSky.classList.add('phase-peak');
+  await sleep(800);
+  // Phase 3: morning flash (1600-2000ms)
+  lockSky.classList.remove('phase-peak');
+  lockSky.classList.add('phase-morning');
+  await sunPromise; // wait for orb to finish
+  // Fade out sun orb
+  sunOrb.classList.remove('visible');
   await sleep(200);
 
-  // Clock + date fade in over sunrise
+  // STEP 4: Clock appears on bright morning
   lockTime.classList.add('visible');
   lockDate.classList.add('visible');
   await sleep(600);
-  await sleep(2000);
+  await sleep(1500);
 
-  // Notification card
+  // STEP 5: Notification on light background
+  lockNotif.classList.add('light');
   lockNotif.classList.add('show');
   await sleep(t.notificationHold);
 
-  // Tap
+  // Tap + dismiss
   lockNotif.classList.add('tap');
   await sleep(250);
   lockNotif.classList.remove('show');
   lockNotif.classList.add('dismiss');
   await sleep(300);
 
-  // Update clock before fade
+  // STEP 6: Transition back to chat
   sbTime.textContent = '7:00';
-
-  // Fade lock screen out
   lockOverlay.classList.remove('show');
   await sleep(400);
 
@@ -924,10 +996,8 @@ async function playSevenAm() {
     await sleep(t.sevenAmBubbleGap);
   }
 
-  // Silence
   await sleep(t.silenceAfterBriefs);
 
-  // Fade phone
   phoneWrap.classList.add('fade-out');
   await sleep(t.phoneFadeOut);
   await sleep(100);
@@ -948,10 +1018,12 @@ function resetAll() {
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
   lockOverlay.classList.remove('show');
-  lockSunrise.classList.remove('show');
+  lockSky.className = 'lock-sky';
+  sunOrb.classList.remove('visible');
+  sunOrb.style.left = '-20px'; sunOrb.style.bottom = '-20px';
   lockTime.classList.remove('visible');
   lockDate.classList.remove('visible');
-  lockNotif.classList.remove('show', 'tap', 'dismiss');
+  lockNotif.classList.remove('show', 'tap', 'dismiss', 'light');
   sbTime.textContent = '9:41';
   sbTime.style.opacity = '1';
   requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
