@@ -579,6 +579,7 @@ Worth a quick conversation?</div>
       <button class="panel-btn primary" id="startBtn">Start Demo</button>
       <button class="panel-btn ghost" id="earlyAccessBtn">Get Early Access</button>
     </div>
+    <button class="panel-btn ghost" id="muteBtn" onclick="toggleMute()" style="margin-top:8px;font-size:13px;padding:8px 20px">&#x1F50A; Sound on</button>
     <div class="small-print">Founding member pricing: $500/mo</div>
   </div>
 </div>
@@ -702,218 +703,152 @@ const CONFIG = {
 };
 
 // =============================================================
-// AUDIO SYSTEM — loads on first Start Demo click, fails silently
+// AUDIO SYSTEM — Simple HTML5 Audio, no Web Audio API
 // =============================================================
-class AudioManager {
-  constructor() {
-    this.ctx = null;
-    this.buffers = {};
-    this.muted = false;
-    this.ambient = null;
-    this.ambientGain = null;
-    this.ambientBaseVol = 0.06; // current target before ducking
-    this.ducked = false;
-    this.timers = []; // all scheduled setTimeout IDs
-    this.files = {
-      'vo1': 'audio/vo-clip1.mp3',
-      'vo2': 'audio/vo-clip2.wav',
-      'vo3': 'audio/vo-clip3.wav',
-      'send': 'audio/send.mp3',
-      'typing': 'audio/typing.mp3',
-      'unlock': 'audio/unlock.mp3',
-      'pop': 'audio/pop.mp3',
-      'pursue': 'audio/pursue.mp3',
-      'chime': 'audio/chime.mp3',
-      'ambient': 'audio/ambient.mp3',
-    };
-  }
+const sounds = {
+  pop:     new Audio('audio/pop.mp3'),
+  send:    new Audio('audio/send.mp3'),
+  typing:  new Audio('audio/typing.mp3'),
+  unlock:  new Audio('audio/unlock.mp3'),
+  pursue:  new Audio('audio/pursue.mp3'),
+  chime:   new Audio('audio/chime.mp3'),
+  ambient: new Audio('audio/ambient.mp3'),
+  vo1:     new Audio('audio/vo-clip1.mp3'),
+  vo2:     new Audio('audio/vo-clip2.wav'),
+  vo3:     new Audio('audio/vo-clip3.wav'),
+};
+sounds.pop.volume = 0.25;
+sounds.send.volume = 0.4;
+sounds.typing.volume = 0.2;
+sounds.unlock.volume = 0.3;
+sounds.pursue.volume = 0.6;
+sounds.chime.volume = 0.5;
+sounds.ambient.volume = 0.06;
+sounds.ambient.loop = true;
+sounds.vo1.volume = 1.0;
+sounds.vo2.volume = 1.0;
+sounds.vo3.volume = 1.0;
 
-  async init() {
-    if (this.ctx) return;
-    try {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      await Promise.all(Object.entries(this.files).map(async ([key, url]) => {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) { console.warn(`[Audio] Failed to load: ${url} (${res.status})`); return; }
-          const buf = await res.arrayBuffer();
-          this.buffers[key] = await this.ctx.decodeAudioData(buf);
-          console.log(`[Audio] Loaded: ${key} (${url})`);
-        } catch(e) { console.warn(`[Audio] Error loading ${url}:`, e.message); }
-      }));
-    } catch(e) { console.warn('[Audio] AudioContext init failed:', e.message); this.ctx = null; }
-  }
+let isMuted = false;
+const audioTimers = [];
 
-  play(key, volume = 1.0) {
-    if (!this.ctx || !this.buffers[key] || this.muted) return null;
-    console.log(`[Audio] Playing: ${key} @ vol ${volume}`);
-    try {
-      const src = this.ctx.createBufferSource();
-      const gain = this.ctx.createGain();
-      src.buffer = this.buffers[key];
-      gain.gain.value = volume;
-      src.connect(gain).connect(this.ctx.destination);
-      src.start();
-      return { src, gain };
-    } catch(e) { return null; }
-  }
-
-  // Schedule a sound at delayMs from now — returns timer ID
-  schedule(key, delayMs, volume = 1.0) {
-    const timer = setTimeout(() => {
-      this.play(key, volume);
-    }, delayMs);
-    this.timers.push(timer);
-    return timer;
-  }
-
-  // Schedule an arbitrary callback at delayMs from now
-  scheduleCallback(delayMs, fn) {
-    const timer = setTimeout(fn, delayMs);
-    this.timers.push(timer);
-    return timer;
-  }
-
-  startAmbient() {
-    if (!this.ctx || !this.buffers.ambient || this.muted) return;
-    try {
-      const src = this.ctx.createBufferSource();
-      this.ambientGain = this.ctx.createGain();
-      src.buffer = this.buffers.ambient;
-      src.loop = true;
-      this.ambientBaseVol = 0.06;
-      this.ambientGain.gain.value = 0.06;
-      src.connect(this.ambientGain).connect(this.ctx.destination);
-      src.start();
-      this.ambient = src;
-      this.ducked = false;
-    } catch(e) {}
-  }
-
-  // Set the base ambient volume (before ducking)
-  setAmbientBase(vol, rampMs = 500) {
-    this.ambientBaseVol = vol;
-    if (!this.ducked) this._rampAmbient(vol, rampMs);
-  }
-
-  // Duck ambient to 30% of current base
-  duckAmbient(rampMs = 800) {
-    this.ducked = true;
-    this._rampAmbient(this.ambientBaseVol * 0.3, rampMs);
-    console.log(`[Audio] Ambient ducked to ${(this.ambientBaseVol * 0.3).toFixed(3)}`);
-  }
-
-  // Unduck — restore to full base volume
-  unduckAmbient(rampMs = 1200) {
-    this.ducked = false;
-    this._rampAmbient(this.ambientBaseVol, rampMs);
-    console.log(`[Audio] Ambient unducked to ${this.ambientBaseVol}`);
-  }
-
-  _rampAmbient(vol, rampMs) {
-    if (!this.ambientGain || !this.ctx) return;
-    try {
-      const now = this.ctx.currentTime;
-      this.ambientGain.gain.cancelScheduledValues(now);
-      this.ambientGain.gain.setValueAtTime(this.ambientGain.gain.value, now);
-      this.ambientGain.gain.linearRampToValueAtTime(vol, now + rampMs / 1000);
-    } catch(e) {}
-  }
-
-  stopAmbient() {
-    try { if (this.ambient) { this.ambient.stop(); this.ambient = null; } } catch(e) {}
-  }
-
-  cancelAll() {
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers = [];
-    this.stopAmbient();
-  }
-
-  toggleMute() { this.muted = !this.muted; return this.muted; }
+function playSound(key, volume) {
+  try {
+    if (isMuted) return;
+    if (volume !== undefined) sounds[key].volume = volume;
+    sounds[key].currentTime = 0;
+    sounds[key].play().catch(() => {});
+    console.log(`[Audio] Playing: ${key} @ vol ${sounds[key].volume}`);
+  } catch(e) {}
 }
 
-const audio = new AudioManager();
+function scheduleSound(key, delayMs, volume) {
+  const t = setTimeout(() => playSound(key, volume), delayMs);
+  audioTimers.push(t);
+}
 
-// SFX + VO + Ambient timeline — all delayMs relative to demo start
+function scheduleCallback(delayMs, fn) {
+  const t = setTimeout(fn, delayMs);
+  audioTimers.push(t);
+}
+
+function duckAmbient(targetVolume, durationMs) {
+  const start = sounds.ambient.volume;
+  const steps = 20;
+  const stepTime = durationMs / steps;
+  const stepSize = (targetVolume - start) / steps;
+  let step = 0;
+  const interval = setInterval(() => {
+    step++;
+    sounds.ambient.volume = Math.max(0, Math.min(1, start + stepSize * step));
+    if (step >= steps) clearInterval(interval);
+  }, stepTime);
+  audioTimers.push(interval);
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  Object.values(sounds).forEach(s => s.muted = isMuted);
+  const btn = document.getElementById('muteBtn');
+  if (btn) btn.textContent = isMuted ? '\uD83D\uDD07 Sound off' : '\uD83D\uDD0A Sound on';
+}
+
+function resetAudio() {
+  audioTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  audioTimers.length = 0;
+  Object.values(sounds).forEach(s => {
+    try { s.pause(); s.currentTime = 0; } catch(e) {}
+  });
+  sounds.ambient.volume = 0.06;
+}
+
 function scheduleSFX() {
-  const a = audio;
+  // Ambient
+  sounds.ambient.play().catch(() => {});
 
-  // ── Ambient music ──
-  a.startAmbient();
-  // Base volume ramps (independent of ducking)
-  a.scheduleCallback(30000, () => a.setAmbientBase(0.08, 2000));
-  a.scheduleCallback(51000, () => a.setAmbientBase(0.12, 2000));
-  a.scheduleCallback(60000, () => a.setAmbientBase(0.15, 2000));
-  a.scheduleCallback(73000, () => a.setAmbientBase(0.08, 2000));
-  a.scheduleCallback(76000, () => a.setAmbientBase(0.0, 3000));
+  // Ambient ducking
+  scheduleCallback(0, () => duckAmbient(0.02, 800));
+  scheduleCallback(40000, () => duckAmbient(0.06, 1200));
+  scheduleCallback(50000, () => duckAmbient(0.02, 800));
+  scheduleCallback(83000, () => duckAmbient(0.10, 1200));
+  scheduleCallback(88000, () => duckAmbient(0.02, 800));
+  scheduleCallback(94000, () => duckAmbient(0, 2000));
 
-  // ── VO clips + ducking ──
-  // Clip 1: 0ms–40000ms
-  a.schedule('vo1', 0, 1.0);
-  a.scheduleCallback(0, () => a.duckAmbient(800));
-  a.scheduleCallback(40000, () => a.unduckAmbient(1200));
+  // VO clips
+  scheduleSound('vo1', 0);
+  scheduleSound('vo2', 40000);
+  scheduleSound('vo3', 83000);
 
-  // Clip 2: 50000ms–83000ms (silence gap 40000–50000)
-  a.schedule('vo2', 50000, 1.0);
-  a.scheduleCallback(50000, () => a.duckAmbient(800));
-  a.scheduleCallback(83000, () => a.unduckAmbient(1200));
+  // Scene 1
+  scheduleSound('typing', 1200);
+  scheduleSound('send', 1850);
+  scheduleSound('pop', 3850, 0.2);
+  scheduleSound('pop', 4650, 0.15);
+  scheduleSound('pop', 5450, 0.15);
+  scheduleSound('pop', 6250, 0.15);
+  scheduleSound('pop', 7250, 0.2);
+  scheduleSound('pop', 8450, 0.25);
+  scheduleSound('pursue', 11450);
+  scheduleSound('pop', 13850, 0.25);
+  scheduleSound('pursue', 15850);
 
-  // Clip 3: 83000ms–94000ms
-  a.schedule('vo3', 83000, 1.0);
-  a.scheduleCallback(83000, () => a.duckAmbient(800));
-  a.scheduleCallback(94000, () => a.setAmbientBase(0.0, 2000)); // fade out with closing
+  // Scene 2
+  scheduleSound('typing', 20450);
+  scheduleSound('send', 21010);
+  scheduleSound('pop', 23810, 0.15);
+  scheduleSound('pop', 24410, 0.25);
 
-  // ── Scene 1 SFX ──
-  a.schedule('typing', 1200, 0.2);
-  a.schedule('send', 1850, 0.4);
-  a.schedule('pop', 3850, 0.2);
-  a.schedule('pop', 4650, 0.15);
-  a.schedule('pop', 5450, 0.15);
-  a.schedule('pop', 6250, 0.15);
-  a.schedule('pop', 7250, 0.2);
-  a.schedule('pop', 8450, 0.25);
-  a.schedule('pursue', 11450, 0.6);
-  a.schedule('pop', 13850, 0.25);
-  a.schedule('pursue', 15850, 0.6);
+  // Scene 3
+  scheduleSound('typing', 34610);
+  scheduleSound('send', 35260);
+  scheduleSound('pop', 37260, 0.15);
+  scheduleSound('pop', 37860, 0.2);
+  scheduleSound('pop', 38660, 0.2);
+  scheduleSound('pop', 39460, 0.2);
+  scheduleSound('pop', 40260, 0.2);
 
-  // ── Scene 2 SFX ──
-  a.schedule('typing', 20450, 0.2);
-  a.schedule('send', 21010, 0.4);
-  a.schedule('pop', 23810, 0.15);
-  a.schedule('pop', 24410, 0.25);
+  // Scene 4
+  scheduleSound('typing', 42860);
+  scheduleSound('send', 43510);
+  scheduleSound('pop', 45510, 0.2);
+  scheduleSound('pop', 47010, 0.2);
+  scheduleSound('pop', 49310, 0.2);
 
-  // ── Scene 3 SFX ──
-  a.schedule('typing', 34610, 0.2);
-  a.schedule('send', 35260, 0.4);
-  a.schedule('pop', 37260, 0.15);
-  a.schedule('pop', 37860, 0.2);
-  a.schedule('pop', 38660, 0.2);
-  a.schedule('pop', 39460, 0.2);
-  a.schedule('pop', 40260, 0.2);
+  // 7AM sequence
+  scheduleSound('unlock', 52110);
+  scheduleSound('chime', 54210);
+  scheduleSound('pop', 55710, 0.3);
+  scheduleSound('pop', 58960, 0.25);
+  scheduleSound('pop', 60860, 0.3);
+  scheduleSound('pop', 62060, 0.2);
+  scheduleSound('pop', 64460, 0.25);
+  scheduleSound('pop', 66260, 0.25);
+  scheduleSound('pop', 68060, 0.25);
+  scheduleSound('pop', 69860, 0.25);
+  scheduleSound('pop', 71660, 0.2);
 
-  // ── Scene 4 SFX ──
-  a.schedule('typing', 42860, 0.2);
-  a.schedule('send', 43510, 0.4);
-  a.schedule('pop', 45510, 0.2);
-  a.schedule('pop', 47010, 0.2);
-  a.schedule('pop', 49310, 0.2);
-
-  // ── 7AM sequence SFX ──
-  a.schedule('unlock', 52110, 0.3);
-  a.schedule('chime', 54210, 0.5);
-  a.schedule('pop', 55710, 0.3);
-  a.schedule('pop', 58960, 0.25);
-
-  // ── Overnight bubble SFX ──
-  a.schedule('pop', 60860, 0.3);
-  a.schedule('pop', 62060, 0.2);
-  a.schedule('pop', 63260, 0.2);
-  a.schedule('pop', 64460, 0.25);
-  a.schedule('pop', 66260, 0.25);
-  a.schedule('pop', 68060, 0.25);
-  a.schedule('pop', 69860, 0.25);
-  a.schedule('pop', 71660, 0.2);
+  // Closing
+  scheduleSound('unlock', 76360, 0.2);
 }
 
 // =============================================================
@@ -1155,7 +1090,7 @@ async function playClosing() {
 const staticMessages = msgBox.innerHTML;
 
 function resetAll() {
-  audio.cancelAll();
+  resetAudio();
   msgBox.innerHTML = staticMessages;
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
@@ -1173,10 +1108,6 @@ async function runDemo() {
   if (running) return;
   running = true;
   startBtn.disabled = true;
-
-  // Initialize audio on first click (browser autoplay policy)
-  await audio.init();
-  audio.cancelAll();
 
   resetAll();
   msgBox.scrollTop = msgBox.scrollHeight;
