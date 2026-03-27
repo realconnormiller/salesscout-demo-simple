@@ -725,6 +725,9 @@ sounds.typing.volume = 0.2;
 sounds.unlock.volume = 0.3;
 sounds.pursue.volume = 0.6;
 sounds.pursue2.volume = 0.6;
+// Force preload pursue2
+sounds.pursue2.preload = 'auto';
+sounds.pursue2.load();
 sounds.chime.volume = 0.5;
 sounds.ambient.volume = 0.06;
 sounds.ambient.loop = true;
@@ -743,12 +746,13 @@ let audioPausedElapsed = 0;
 
 function playSound(key, volume) {
   try {
-    if (isMuted || audioPaused) return;
+    if (isMuted || audioPaused) { console.log(`[Audio] BLOCKED: ${key} (muted=${isMuted} paused=${audioPaused})`); return; }
+    if (!sounds[key]) { console.log(`[Audio] NOT FOUND: ${key}`); return; }
     if (volume !== undefined) sounds[key].volume = volume;
     sounds[key].currentTime = 0;
-    sounds[key].play().catch(() => {});
+    sounds[key].play().catch(e => console.log(`[Audio] PLAY ERROR: ${key}`, e));
     console.log(`[Audio] Playing: ${key} @ vol ${sounds[key].volume}`);
-  } catch(e) {}
+  } catch(e) { console.log(`[Audio] EXCEPTION: ${key}`, e); }
 }
 
 // Register a sound in the master schedule
@@ -863,15 +867,7 @@ function scheduleSFX() {
   scheduleSound('typing', 0);
   scheduleSound('send', 1600);
   scheduleSound('pursue', 10800);
-  // Second pursue uses fresh Audio instance to avoid reuse delay
-  scheduleCallback(16400, () => {
-    try {
-      const p = new Audio('audio/pursue.mp3');
-      p.volume = 0.6;
-      p.play().catch(() => {});
-      console.log('[Audio] Playing: pursue2 (fresh) @ vol 0.6');
-    } catch(e) {}
-  });
+  scheduleSound('pursue2', 16400);
 
   // Scene 2
   scheduleSound('send', 21010);
