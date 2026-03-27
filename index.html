@@ -857,11 +857,11 @@ function scheduleSFX() {
   scheduleCallback(78360, () => duckAmbient(0, 2000));         // VO5 ends, fade out
 
   // VO clips
-  scheduleSound('vo1', 3500);      // ends ~25500 (22s clip)
-  scheduleSound('vo2', 26500);     // +4800 from old 21700
-  scheduleSound('vo3', 41010);     // +4800 from old 36210
-  scheduleSound('vo4', 67660);     // +4800 from old 62860
-  scheduleSound('vo5', 83160);     // +4800 from old 78360
+  scheduleSound('vo1', 3500);      // 22s → ends 25500
+  scheduleSound('vo2', 26500);     // 11s → ends 37500
+  scheduleSound('vo3', 38500);     // 15s → ends 53500
+  scheduleSound('vo4', 54500);     // 8s  → ends 62500
+  scheduleSound('vo5', 63500);     // 2s  → ends 65500
 
   // Scene 1
   scheduleSound('typing', 0);
