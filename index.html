@@ -860,7 +860,6 @@ Worth a quick conversation?</div>
       <button class="panel-btn ghost" id="earlyAccessBtn">Get Early Access</button>
     </div>
     <button class="panel-btn ghost" id="muteBtn" onclick="toggleMute()" style="margin-top:8px;font-size:13px;padding:8px 20px">&#x1F50A; Sound on</button>
-    <button class="panel-btn ghost" id="debugPauseBtn" style="margin-top:4px;font-size:13px;padding:8px 20px">&#x23F8; Pause</button>
     <div class="small-print">Founding member pricing: $500/mo</div>
   </div>
 </div>
@@ -1764,8 +1763,6 @@ function resetAll() {
   requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
 }
 
-const sceneLabels = ['Scene 1 \u2014 Query', 'Scene 2 \u2014 Outreach', 'Scene 3 \u2014 Discovery', 'Scene 4 \u2014 Pipeline'];
-
 async function runDemo() {
   if (running) return;
   running = true;
@@ -1774,7 +1771,6 @@ async function runDemo() {
   resetAll();
   resetPipelineCounter();
 
-  debugStartTimer();
   msgBox.scrollTop = msgBox.scrollHeight;
   await sleep(800);
 
@@ -1782,216 +1778,20 @@ async function runDemo() {
   scheduleSFX();
 
   for (let i = 0; i < CONFIG.scenes.length; i++) {
-    debugSetScene(sceneLabels[i] || 'Scene ' + (i + 1));
     await playScene(CONFIG.scenes[i]);
     const isLast = (i === CONFIG.scenes.length - 1);
     await sleep(isLast ? CONFIG.timing.preSevenAmPause : CONFIG.timing.sceneGap);
   }
 
-  debugSetScene('7AM Sequence');
   await playSevenAm();
-
-  debugSetScene('Closing');
   await playClosing();
 
-  debugStopTimer();
-  debugSetScene('Done');
   running = false;
   startBtn.disabled = false;
   startBtn.textContent = 'Start Demo';
 }
 // =============================================================
 // DEBUG — temporary, remove after calibration
-// =============================================================
-function debugSetScene() {}
-function debugStartTimer() {}
-function debugStopTimer() {}
 </script>
-
-<!-- Debug UI — all DOM first, then script -->
-<div id="debugTimer" style="position:fixed;top:12px;right:12px;background:rgba(0,0,0,0.9);color:#fff;font-size:14px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">T: 0ms</div>
-<div id="debugScene" style="position:fixed;top:12px;right:140px;background:rgba(0,0,0,0.9);color:#4db8ff;font-size:13px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">Idle</div>
-<div id="debugBar" style="position:fixed;bottom:0;left:0;right:0;height:48px;background:#0a0a0a;border-top:1px solid #222;z-index:9999;display:flex;align-items:center;padding:0 16px;gap:12px;">
-  <button id="dbPause" style="background:none;border:1px solid #444;color:#fff;font-size:18px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:monospace;width:36px">&#x23F8;</button>
-  <div id="dbTimeL" style="font-size:12px;font-family:monospace;color:#aaa;width:56px;text-align:right;flex-shrink:0">0:00</div>
-  <div id="dbTrack" style="flex:1;position:relative;height:8px;background:#222;border-radius:4px;cursor:pointer;user-select:none;">
-    <div id="dbMarkers" style="position:absolute;inset:0;pointer-events:none;"></div>
-    <div id="dbFill" style="height:100%;width:0%;background:linear-gradient(90deg,#1a6fff,#4db8ff);border-radius:4px;pointer-events:none;"></div>
-    <div id="dbHead" style="position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:16px;height:16px;background:#fff;border-radius:50%;z-index:3;box-shadow:0 0 8px rgba(26,111,255,0.6);cursor:grab;"></div>
-  </div>
-  <div id="dbTimeR" style="font-size:12px;font-family:monospace;color:#666;width:56px;flex-shrink:0">1:35</div>
-</div>
-
-<script>
-// Debug controller — runs after DOM exists
-(function() {
-  const TOTAL = 95000;
-  const MARKERS = [
-    { ms: 0, label: 'S1', color: '#4db8ff' },
-    { ms: 20050, label: 'S2', color: '#4db8ff' },
-    { ms: 34210, label: 'S3', color: '#4db8ff' },
-    { ms: 42460, label: 'S4', color: '#4db8ff' },
-    { ms: 51310, label: '7AM', color: '#ff9500' },
-    { ms: 76360, label: 'Close', color: '#ff3b30' },
-  ];
-  const SCENES = [
-    [0, 'Scene 1 — Query'],
-    [20050, 'Scene 2 — Outreach'],
-    [34210, 'Scene 3 — Discovery'],
-    [42460, 'Scene 4 — Pipeline'],
-    [51310, '7AM Sequence'],
-    [76360, 'Closing'],
-  ];
-
-  const els = {
-    timer: document.getElementById('debugTimer'),
-    scene: document.getElementById('debugScene'),
-    pause: document.getElementById('dbPause'),
-    track: document.getElementById('dbTrack'),
-    fill:  document.getElementById('dbFill'),
-    head:  document.getElementById('dbHead'),
-    timeL: document.getElementById('dbTimeL'),
-    timeR: document.getElementById('dbTimeR'),
-    markers: document.getElementById('dbMarkers'),
-  };
-
-  // Render markers
-  MARKERS.forEach(m => {
-    const pct = (m.ms / TOTAL * 100) + '%';
-    const tick = document.createElement('div');
-    tick.style.cssText = 'position:absolute;top:-2px;width:1px;height:12px;background:' + m.color + ';opacity:0.7;';
-    tick.style.left = pct;
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'position:absolute;top:-18px;font-size:9px;font-family:monospace;color:' + m.color + ';transform:translateX(-50%);white-space:nowrap;';
-    lbl.style.left = pct;
-    lbl.textContent = m.label;
-    els.markers.appendChild(tick);
-    els.markers.appendChild(lbl);
-  });
-
-  let startT = 0, elapsed = 0, paused = false, pausedAt = 0, interval = null, active = false;
-
-  function fmt(ms) {
-    const s = Math.floor(ms / 1000);
-    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-  }
-
-  function updateUI() {
-    const pct = Math.min(elapsed / TOTAL * 100, 100);
-    els.fill.style.width = pct + '%';
-    els.head.style.left = pct + '%';
-    els.timer.textContent = 'T: ' + elapsed.toLocaleString() + 'ms';
-    els.timeL.textContent = fmt(elapsed);
-    // Scene label
-    let lbl = 'Idle';
-    for (let i = SCENES.length - 1; i >= 0; i--) {
-      if (elapsed >= SCENES[i][0]) { lbl = SCENES[i][1]; break; }
-    }
-    els.scene.textContent = lbl;
-  }
-
-  function tick() {
-    if (!paused && active) {
-      elapsed = Math.round(performance.now() - startT);
-      updateUI();
-    }
-  }
-
-  // Seek all audio to a given ms position
-  function seekTo(ms) {
-    elapsed = ms;
-    startT = performance.now() - ms;
-    // Seek VO clips — find which one should be playing
-    const voSchedule = [
-      { key: 'vo1', start: 2000 },
-      { key: 'vo2', start: 20050 },
-      { key: 'vo3', start: 34210 },
-      { key: 'vo4', start: 60860 },
-      { key: 'vo5', start: 76360 },
-    ];
-    // Stop all VO first
-    voSchedule.forEach(v => {
-      try { sounds[v.key].pause(); sounds[v.key].currentTime = 0; } catch(e) {}
-    });
-    // Find current VO and seek into it
-    for (let i = voSchedule.length - 1; i >= 0; i--) {
-      const v = voSchedule[i];
-      if (ms >= v.start) {
-        const offset = (ms - v.start) / 1000;
-        try {
-          sounds[v.key].currentTime = offset;
-          if (!paused) sounds[v.key].play().catch(() => {});
-        } catch(e) {}
-        break;
-      }
-    }
-    // Seek ambient
-    try {
-      sounds.ambient.currentTime = ms / 1000;
-      if (!paused) sounds.ambient.play().catch(() => {});
-    } catch(e) {}
-    updateUI();
-  }
-
-  // Pause / Resume — uses audioPause/audioResume from audio system
-  els.pause.addEventListener('click', () => {
-    if (!active) return;
-    if (!paused) {
-      paused = true;
-      pausedAt = performance.now();
-      audioPause();
-      els.pause.innerHTML = '&#x25B6;';
-    } else {
-      startT += performance.now() - pausedAt;
-      paused = false;
-      audioResume();
-      els.pause.innerHTML = '&#x23F8;';
-    }
-  });
-
-  // Click on track to seek
-  function getClickMs(e) {
-    const rect = els.track.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    return Math.round(pct * TOTAL);
-  }
-
-  els.track.addEventListener('mousedown', e => {
-    if (!active) return;
-    seekTo(getClickMs(e));
-    const onMove = ev => seekTo(getClickMs(ev));
-    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
-
-  // Touch support
-  els.track.addEventListener('touchstart', e => {
-    if (!active) return;
-    seekTo(getClickMs(e.touches[0]));
-    const onMove = ev => { ev.preventDefault(); seekTo(getClickMs(ev.touches[0])); };
-    const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onEnd);
-  }, { passive: false });
-
-  // Public API
-  window.debugSetScene = function(label) { els.scene.textContent = label; };
-  window.debugStartTimer = function() {
-    active = true; paused = false; elapsed = 0;
-    startT = performance.now();
-    els.pause.innerHTML = '&#x23F8;';
-    if (interval) clearInterval(interval);
-    interval = setInterval(tick, 50);
-  };
-  window.debugStopTimer = function() {
-    active = false;
-    if (interval) { clearInterval(interval); interval = null; }
-    els.timer.textContent = 'T: done';
-    els.scene.textContent = 'Done';
-  };
-})();
-</script>
-
 </body>
 </html>
