@@ -841,9 +841,11 @@ function resetAudio() {
   sounds.ambient.volume = 0.03;
 }
 
+const isMobile = window.innerWidth <= 768;
+
 function scheduleSFX() {
-  // Ambient
-  sounds.ambient.play().catch(() => {});
+  // Ambient — skip on mobile so VO stays clear
+  if (!isMobile) sounds.ambient.play().catch(() => {});
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
