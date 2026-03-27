@@ -709,7 +709,8 @@ const CONFIG = {
 const sounds = {
   send:    new Audio('audio/send.mp3'),
   typing:  new Audio('audio/typing.mp3'),
-  unlock:  new Audio('audio/unlock.mp3'),
+  lock:    new Audio('audio/phone lock.mp3'),
+  unlock:  new Audio('audio/phone unlock.mp3'),
   pursue:  new Audio('audio/pursue.mp3'),
   pursue2: new Audio('audio/pursue.mp3'),
   chime:   new Audio('audio/chime.mp3'),
@@ -722,6 +723,7 @@ const sounds = {
 };
 sounds.send.volume = 0.4;
 sounds.typing.volume = 0.2;
+sounds.lock.volume = 1.0;
 sounds.unlock.volume = 1.0;
 sounds.pursue.volume = 0.6;
 sounds.pursue2.volume = 0.6;
@@ -878,11 +880,12 @@ function scheduleSFX() {
   scheduleSound('send', 43510);
 
   // 7AM sequence
-  scheduleSound('unlock', 60000);
+  scheduleSound('lock', 60000);
   scheduleSound('chime', 62000);
+  scheduleSound('unlock', 67000);
 
   // Closing
-  scheduleSound('unlock', 76360, 0.2);
+  scheduleSound('lock', 76360, 0.2);
 
   // Fire all scheduled events
   audioStartTime = performance.now();
