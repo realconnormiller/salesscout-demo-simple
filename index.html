@@ -717,7 +717,7 @@ const sounds = {
   vo2:     new Audio('audio/vo-clip2.wav'),
   vo3:     new Audio('audio/vo-clip3.wav'),
 };
-sounds.pop.volume = 0.25;
+sounds.pop.volume = 0.08;
 sounds.send.volume = 0.4;
 sounds.typing.volume = 0.2;
 sounds.unlock.volume = 0.3;
@@ -802,50 +802,50 @@ function scheduleSFX() {
   // Scene 1
   scheduleSound('typing', 1200);
   scheduleSound('send', 1850);
-  scheduleSound('pop', 3850, 0.2);
-  scheduleSound('pop', 4650, 0.15);
-  scheduleSound('pop', 5450, 0.15);
-  scheduleSound('pop', 6250, 0.15);
-  scheduleSound('pop', 7250, 0.2);
-  scheduleSound('pop', 8450, 0.25);
-  scheduleSound('pursue', 11450);
-  scheduleSound('pop', 13850, 0.25);
-  scheduleSound('pursue', 15850);
+  scheduleSound('pop', 3850, 0.08);
+  scheduleSound('pop', 4650, 0.06);
+  scheduleSound('pop', 5450, 0.06);
+  scheduleSound('pop', 6250, 0.06);
+  scheduleSound('pop', 7250, 0.08);
+  scheduleSound('pop', 8450, 0.10);
+  scheduleSound('pursue', 11300);
+  scheduleSound('pop', 13850, 0.10);
+  scheduleSound('pursue', 15700);
 
   // Scene 2
   scheduleSound('typing', 20450);
   scheduleSound('send', 21010);
-  scheduleSound('pop', 23810, 0.15);
-  scheduleSound('pop', 24410, 0.25);
+  scheduleSound('pop', 23810, 0.06);
+  scheduleSound('pop', 24410, 0.10);
 
   // Scene 3
   scheduleSound('typing', 34610);
   scheduleSound('send', 35260);
-  scheduleSound('pop', 37260, 0.15);
-  scheduleSound('pop', 37860, 0.2);
-  scheduleSound('pop', 38660, 0.2);
-  scheduleSound('pop', 39460, 0.2);
-  scheduleSound('pop', 40260, 0.2);
+  scheduleSound('pop', 37260, 0.06);
+  scheduleSound('pop', 37860, 0.08);
+  scheduleSound('pop', 38660, 0.08);
+  scheduleSound('pop', 39460, 0.08);
+  scheduleSound('pop', 40260, 0.08);
 
   // Scene 4
   scheduleSound('typing', 42860);
   scheduleSound('send', 43510);
-  scheduleSound('pop', 45510, 0.2);
-  scheduleSound('pop', 47010, 0.2);
-  scheduleSound('pop', 49310, 0.2);
+  scheduleSound('pop', 45510, 0.08);
+  scheduleSound('pop', 47010, 0.08);
+  scheduleSound('pop', 49310, 0.08);
 
   // 7AM sequence
   scheduleSound('unlock', 52110);
   scheduleSound('chime', 54210);
-  scheduleSound('pop', 55710, 0.3);
-  scheduleSound('pop', 58960, 0.25);
-  scheduleSound('pop', 60860, 0.3);
-  scheduleSound('pop', 62060, 0.2);
-  scheduleSound('pop', 64460, 0.25);
-  scheduleSound('pop', 66260, 0.25);
-  scheduleSound('pop', 68060, 0.25);
-  scheduleSound('pop', 69860, 0.25);
-  scheduleSound('pop', 71660, 0.2);
+  scheduleSound('pop', 55710, 0.12);
+  scheduleSound('pop', 58960, 0.10);
+  scheduleSound('pop', 60860, 0.12);
+  scheduleSound('pop', 62060, 0.08);
+  scheduleSound('pop', 64460, 0.10);
+  scheduleSound('pop', 66260, 0.10);
+  scheduleSound('pop', 68060, 0.10);
+  scheduleSound('pop', 69860, 0.10);
+  scheduleSound('pop', 71660, 0.08);
 
   // Closing
   scheduleSound('unlock', 76360, 0.2);
