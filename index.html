@@ -841,16 +841,8 @@ function resetAudio() {
 }
 
 function scheduleSFX() {
-  // Unlock all audio elements on iOS by touching each one
+  // Ambient — file is pre-normalized to -20dB
   const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if (isTouch) {
-    Object.values(sounds).forEach(s => {
-      const origVol = s.volume;
-      s.volume = 0;
-      s.play().then(() => { s.pause(); s.currentTime = 0; s.volume = origVol; }).catch(() => { s.volume = origVol; });
-    });
-  }
-  // Ambient — file is pre-normalized to -20dB so volume values work normally
   if (isTouch) sounds.ambient.volume = 0.3;
   sounds.ambient.play().catch(() => {});
 
