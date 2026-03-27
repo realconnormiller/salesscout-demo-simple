@@ -46,6 +46,7 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
 }
 
 /* Right column — branding + controls */
@@ -57,6 +58,8 @@ body {
   justify-content: center;
   gap: 32px;
   padding: 40px 40px 40px 0;
+  position: relative;
+  z-index: 10;
 }
 
 /* =============================================================
@@ -407,11 +410,11 @@ body {
 
 /* "This is SalesScout" in-demo moment — positioned right of phone */
 .brand-moment {
-  position: fixed;
-  bottom: 40px;
-  left: calc((100vw - 320px) / 2);
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
   transform: translateX(-50%);
-  z-index: 2;
+  z-index: 5;
   text-align: center;
   pointer-events: none;
   opacity: 0;
@@ -550,9 +553,9 @@ body {
    DATA STREAMS — full canvas particle field + source badges
    ============================================================= */
 #dataCanvas {
-  position: fixed;
+  position: absolute;
   top: 0; left: 0;
-  width: 100vw; height: 100vh;
+  width: 100%; height: 100%;
   pointer-events: none;
   z-index: 3;
   opacity: 0;
@@ -562,7 +565,7 @@ body {
 
 /* Floating source badges */
 .source-badge {
-  position: fixed;
+  position: absolute;
   padding: 8px 16px;
   background: rgba(26, 111, 255, 0.08);
   border: 1px solid rgba(26, 111, 255, 0.2);
@@ -762,18 +765,17 @@ body {
   <div class="intro-text">Sales<span class="blue">Scout</span></div>
   <div class="intro-sub">Watch what happens next.</div>
 </div>
-<div class="brand-moment" id="brandMoment">
-  <div class="bm-glow"></div>
-  <div class="bm-this">This is</div>
-  <div class="bm-name">Sales<span class="bm-scout">Scout</span></div>
-  <div class="bm-line"></div>
-</div>
-<canvas id="dataCanvas" width="1920" height="1080"></canvas>
-<div id="badgeContainer" style="position:fixed;inset:0;pointer-events:none;z-index:10;"></div>
-
 <div class="layout">
-  <!-- LEFT COLUMN — Phone -->
+  <!-- LEFT COLUMN — Phone + all animations contained here -->
   <div class="col-left">
+    <div class="brand-moment" id="brandMoment">
+      <div class="bm-glow"></div>
+      <div class="bm-this">This is</div>
+      <div class="bm-name">Sales<span class="bm-scout">Scout</span></div>
+      <div class="bm-line"></div>
+    </div>
+    <canvas id="dataCanvas" width="1920" height="1080"></canvas>
+    <div id="badgeContainer" style="position:absolute;inset:0;pointer-events:none;z-index:8;"></div>
     <div class="phone-wrap" id="phoneWrap">
       <div class="phone-glow"></div>
       <div class="phone">
@@ -1253,20 +1255,24 @@ let particles = [];
 let streamAnimFrame = null;
 let streamActive = false;
 
-// Phone center coordinates (approximate for canvas rendering)
+// Phone center coordinates relative to col-left
 const phoneCenter = { x: 0, y: 0 };
+const colLeft = document.querySelector('.col-left');
 function updatePhoneCenter() {
   const pw = document.getElementById('phoneWrap');
-  if (!pw) return;
-  const r = pw.getBoundingClientRect();
-  phoneCenter.x = r.left + r.width / 2;
-  phoneCenter.y = r.top + r.height / 2;
+  if (!pw || !colLeft) return;
+  const pr = pw.getBoundingClientRect();
+  const cr = colLeft.getBoundingClientRect();
+  phoneCenter.x = (pr.left - cr.left) + pr.width / 2;
+  phoneCenter.y = (pr.top - cr.top) + pr.height / 2;
 }
 
-// Resize canvas to window
+// Resize canvas to col-left dimensions
 function resizeCanvas() {
-  dataCanvas.width = window.innerWidth;
-  dataCanvas.height = window.innerHeight;
+  if (!colLeft) return;
+  const cr = colLeft.getBoundingClientRect();
+  dataCanvas.width = cr.width;
+  dataCanvas.height = cr.height;
   updatePhoneCenter();
 }
 resizeCanvas();
@@ -1398,7 +1404,7 @@ function startDataStreams(labels) {
     badge.innerHTML = `<span class="badge-dot"></span>${label}`;
     badge.style.left = (phoneCenter.x + pos.x) + 'px';
     badge.style.top = (phoneCenter.y + pos.y) + 'px';
-    badge.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    badge.style.transform = 'translate(-50%, -50%)';
     badgeContainer.appendChild(badge);
     // Stagger appearance
     setTimeout(() => badge.classList.add('show'), 300 + i * 200);
