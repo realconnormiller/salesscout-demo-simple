@@ -721,23 +721,22 @@ const sounds = {
   vo4:     new Audio('audio/vo-clip4.wav'),
   vo5:     new Audio('audio/vo-clip5.wav'),
 };
-sounds.send.volume = 0.4;
-sounds.typing.volume = 0.2;
-sounds.lock.volume = 1.0;
-sounds.unlock.volume = 1.0;
-sounds.pursue.volume = 0.6;
-sounds.pursue2.volume = 0.6;
-// Force preload pursue2
+sounds.send.volume = 0.15;
+sounds.typing.volume = 0.12;
+sounds.lock.volume = 0.7;
+sounds.unlock.volume = 0.7;
+sounds.pursue.volume = 0.4;
+sounds.pursue2.volume = 0.4;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
-sounds.chime.volume = 0.5;
+sounds.chime.volume = 0.35;
 sounds.ambient.volume = 0.03;
 sounds.ambient.loop = true;
-sounds.vo1.volume = 1.0;
-sounds.vo2.volume = 1.0;
-sounds.vo3.volume = 1.0;
-sounds.vo4.volume = 1.0;
-sounds.vo5.volume = 1.0;
+sounds.vo1.volume = 0.7;
+sounds.vo2.volume = 0.7;
+sounds.vo3.volume = 0.7;
+sounds.vo4.volume = 0.7;
+sounds.vo5.volume = 0.7;
 
 let isMuted = false;
 let audioTimerIds = [];      // active setTimeout IDs
@@ -844,13 +843,14 @@ function resetAudio() {
 const isMobile = window.innerWidth <= 768;
 
 function scheduleSFX() {
-  // Ambient — skip on mobile so VO stays clear
-  if (!isMobile) sounds.ambient.play().catch(() => {});
+  // Ambient — lower on mobile
+  if (isMobile) sounds.ambient.volume = 0.01;
+  sounds.ambient.play().catch(() => {});
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
   scheduleSound('vo2', 26500);     // 24s → ends 50500
-  scheduleSound('vo4', 53500);     // 8s  → ends 61500
+  scheduleSound('vo4', 53500);     // 11s → ends 64500
   scheduleSound('vo3', 65500);     // 12s → ends 77500
   scheduleSound('vo5', 80200);     // 2s  → ends 82200
 
@@ -860,7 +860,7 @@ function scheduleSFX() {
   scheduleCallback(26500, () => duckAmbient(0.008, 800));      // VO2 starts
   scheduleCallback(50500, () => duckAmbient(0.03, 1200));      // VO2 ends
   scheduleCallback(53500, () => duckAmbient(0.008, 800));      // VO4 starts
-  scheduleCallback(61500, () => duckAmbient(0.03, 1200));      // VO4 ends
+  scheduleCallback(64500, () => duckAmbient(0.03, 1200));      // VO4 ends
   scheduleCallback(65500, () => duckAmbient(0.008, 800));      // VO3 starts
   scheduleCallback(77500, () => duckAmbient(0.03, 1200));      // VO3 ends
   scheduleCallback(80200, () => duckAmbient(0.008, 800));      // VO5 starts
