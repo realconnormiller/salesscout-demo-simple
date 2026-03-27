@@ -733,11 +733,15 @@ sounds.vo4.volume = 1.0;
 sounds.vo5.volume = 1.0;
 
 let isMuted = false;
-const audioTimers = [];
+let audioTimerIds = [];      // active setTimeout IDs
+let audioSchedule = [];      // [{key, absMs, volume, type:'sound'|'cb', fn}] — master schedule
+let audioStartTime = 0;      // performance.now() when scheduleSFX was called
+let audioPaused = false;
+let audioPausedElapsed = 0;
 
 function playSound(key, volume) {
   try {
-    if (isMuted) return;
+    if (isMuted || audioPaused) return;
     if (volume !== undefined) sounds[key].volume = volume;
     sounds[key].currentTime = 0;
     sounds[key].play().catch(() => {});
@@ -745,14 +749,33 @@ function playSound(key, volume) {
   } catch(e) {}
 }
 
-function scheduleSound(key, delayMs, volume) {
-  const t = setTimeout(() => playSound(key, volume), delayMs);
-  audioTimers.push(t);
+// Register a sound in the master schedule
+function scheduleSound(key, absMs, volume) {
+  audioSchedule.push({ type: 'sound', key, absMs, volume });
 }
 
-function scheduleCallback(delayMs, fn) {
-  const t = setTimeout(fn, delayMs);
-  audioTimers.push(t);
+// Register a callback in the master schedule
+function scheduleCallback(absMs, fn) {
+  audioSchedule.push({ type: 'cb', absMs, fn });
+}
+
+// Fire all scheduled events from a given elapsed offset
+function fireScheduleFrom(fromMs) {
+  // Clear any existing timers
+  audioTimerIds.forEach(t => clearTimeout(t));
+  audioTimerIds = [];
+  const now = fromMs;
+  audioSchedule.forEach(item => {
+    if (item.absMs < now) return; // already passed
+    const delay = item.absMs - now;
+    let id;
+    if (item.type === 'sound') {
+      id = setTimeout(() => playSound(item.key, item.volume), delay);
+    } else {
+      id = setTimeout(item.fn, delay);
+    }
+    audioTimerIds.push(id);
+  });
 }
 
 function duckAmbient(targetVolume, durationMs) {
@@ -766,7 +789,30 @@ function duckAmbient(targetVolume, durationMs) {
     sounds.ambient.volume = Math.max(0, Math.min(1, start + stepSize * step));
     if (step >= steps) clearInterval(interval);
   }, stepTime);
-  audioTimers.push(interval);
+  audioTimerIds.push(interval);
+}
+
+function audioPause() {
+  if (audioPaused) return;
+  audioPaused = true;
+  audioPausedElapsed = Math.round(performance.now() - audioStartTime);
+  // Kill all pending timers
+  audioTimerIds.forEach(t => { clearTimeout(t); clearInterval(t); });
+  audioTimerIds = [];
+  // Pause all playing audio
+  Object.values(sounds).forEach(s => { try { s.pause(); } catch(e) {} });
+}
+
+function audioResume() {
+  if (!audioPaused) return;
+  audioPaused = false;
+  audioStartTime = performance.now() - audioPausedElapsed;
+  // Resume audio that was playing
+  Object.values(sounds).forEach(s => {
+    try { if (s.currentTime > 0 && s.currentTime < s.duration) s.play().catch(() => {}); } catch(e) {}
+  });
+  // Reschedule remaining events from current elapsed
+  fireScheduleFrom(audioPausedElapsed);
 }
 
 function toggleMute() {
@@ -777,8 +823,10 @@ function toggleMute() {
 }
 
 function resetAudio() {
-  audioTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
-  audioTimers.length = 0;
+  audioTimerIds.forEach(t => { clearTimeout(t); clearInterval(t); });
+  audioTimerIds = [];
+  audioSchedule = [];
+  audioPaused = false;
   Object.values(sounds).forEach(s => {
     try { s.pause(); s.currentTime = 0; } catch(e) {}
   });
@@ -790,8 +838,8 @@ function scheduleSFX() {
   sounds.ambient.play().catch(() => {});
 
   // Ambient ducking — synced to 5 VO clips
-  scheduleCallback(1000, () => duckAmbient(0.02, 800));         // VO1 starts
-  scheduleCallback(13000, () => duckAmbient(0.06, 1200));      // VO1 ends
+  scheduleCallback(2000, () => duckAmbient(0.02, 800));         // VO1 starts
+  scheduleCallback(18000, () => duckAmbient(0.06, 1200));      // VO1 ends
   scheduleCallback(20050, () => duckAmbient(0.02, 800));       // VO2 starts
   scheduleCallback(30050, () => duckAmbient(0.06, 1200));      // VO2 ends
   scheduleCallback(34210, () => duckAmbient(0.02, 800));       // VO3 starts
@@ -803,7 +851,7 @@ function scheduleSFX() {
   scheduleCallback(78360, () => duckAmbient(0, 2000));         // VO5 ends, fade out
 
   // VO clips
-  scheduleSound('vo1', 1000);
+  scheduleSound('vo1', 2000);
   scheduleSound('vo2', 20050);
   scheduleSound('vo3', 34210);
   scheduleSound('vo4', 60860);
@@ -811,8 +859,8 @@ function scheduleSFX() {
 
   // Scene 1 (typing removed — was causing unwanted noise)
   scheduleSound('send', 2200);
-  scheduleSound('pursue', 11450);
-  scheduleSound('pursue', 15850);
+  scheduleSound('pursue', 10000);
+  scheduleSound('pursue', 14000);
 
   // Scene 2
   scheduleSound('send', 21010);
@@ -829,6 +877,10 @@ function scheduleSFX() {
 
   // Closing
   scheduleSound('unlock', 76360, 0.2);
+
+  // Fire all scheduled events
+  audioStartTime = performance.now();
+  fireScheduleFrom(0);
 }
 
 // =============================================================
@@ -1221,7 +1273,7 @@ function debugStopTimer() {}
     startT = performance.now() - ms;
     // Seek VO clips — find which one should be playing
     const voSchedule = [
-      { key: 'vo1', start: 0 },
+      { key: 'vo1', start: 2000 },
       { key: 'vo2', start: 20050 },
       { key: 'vo3', start: 34210 },
       { key: 'vo4', start: 60860 },
@@ -1251,21 +1303,18 @@ function debugStopTimer() {}
     updateUI();
   }
 
-  // Pause / Resume
+  // Pause / Resume — uses audioPause/audioResume from audio system
   els.pause.addEventListener('click', () => {
     if (!active) return;
     if (!paused) {
       paused = true;
       pausedAt = performance.now();
-      Object.values(sounds).forEach(s => { try { s.pause(); } catch(e) {} });
+      audioPause();
       els.pause.innerHTML = '&#x25B6;';
     } else {
       startT += performance.now() - pausedAt;
       paused = false;
-      // Resume audio that has a currentTime > 0
-      Object.values(sounds).forEach(s => {
-        try { if (s.currentTime > 0 && s.currentTime < s.duration) s.play().catch(() => {}); } catch(e) {}
-      });
+      audioResume();
       els.pause.innerHTML = '&#x23F8;';
     }
   });
