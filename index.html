@@ -612,7 +612,7 @@ const CONFIG = {
     checkmarkGap:         200,
     checkmarkPause:       400,
     decisionPause:       1200,
-    outreachPause:      12000,
+    outreachPause:       6000,
     vibrantHealthPause:  3000,
     pipelineBubbleGap:   1500,
     longBubbleExtra:      800,
@@ -862,7 +862,7 @@ function scheduleSFX() {
   scheduleSound('vo2', 26500);     // 24s → ends 50500
   scheduleSound('vo3', 51500);     // 15s → ends 66500
   scheduleSound('vo4', 67500);     // 8s  → ends 75500
-  scheduleSound('vo5', 83200);     // 2s → fires ~84500 with closing card
+  scheduleSound('vo5', 77200);     // 2s → fires ~78500 with closing card ~79k
 
   // Scene 1
   scheduleSound('typing', 0);
@@ -885,7 +885,7 @@ function scheduleSFX() {
   scheduleSound('unlock', 65700);
 
   // Closing
-  scheduleSound('lock', 83200, 0.2);
+  scheduleSound('lock', 77200, 0.2);
 
   // Fire all scheduled events
   audioStartTime = performance.now();
