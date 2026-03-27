@@ -734,16 +734,18 @@ class AudioManager {
       await Promise.all(Object.entries(this.files).map(async ([key, url]) => {
         try {
           const res = await fetch(url);
-          if (!res.ok) return;
+          if (!res.ok) { console.warn(`[Audio] Failed to load: ${url} (${res.status})`); return; }
           const buf = await res.arrayBuffer();
           this.buffers[key] = await this.ctx.decodeAudioData(buf);
-        } catch(e) { /* silent */ }
+          console.log(`[Audio] Loaded: ${key} (${url})`);
+        } catch(e) { console.warn(`[Audio] Error loading ${url}:`, e.message); }
       }));
-    } catch(e) { this.ctx = null; }
+    } catch(e) { console.warn('[Audio] AudioContext init failed:', e.message); this.ctx = null; }
   }
 
   play(key, volume = 1.0) {
     if (!this.ctx || !this.buffers[key] || this.muted) return null;
+    console.log(`[Audio] Playing: ${key} @ vol ${volume}`);
     try {
       const src = this.ctx.createBufferSource();
       const gain = this.ctx.createGain();
