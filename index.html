@@ -706,18 +706,18 @@ const CONFIG = {
 // AUDIO SYSTEM — Simple HTML5 Audio, no Web Audio API
 // =============================================================
 const sounds = {
-  pop:     new Audio('audio/pop.mp3'),
   send:    new Audio('audio/send.mp3'),
   typing:  new Audio('audio/typing.mp3'),
   unlock:  new Audio('audio/unlock.mp3'),
   pursue:  new Audio('audio/pursue.mp3'),
   chime:   new Audio('audio/chime.mp3'),
   ambient: new Audio('audio/ambient.mp3'),
-  vo1:     new Audio('audio/vo-clip1.mp3'),
+  vo1:     new Audio('audio/vo-clip1.wav'),
   vo2:     new Audio('audio/vo-clip2.wav'),
   vo3:     new Audio('audio/vo-clip3.wav'),
+  vo4:     new Audio('audio/vo-clip4.wav'),
+  vo5:     new Audio('audio/vo-clip5.wav'),
 };
-sounds.pop.volume = 0.08;
 sounds.send.volume = 0.4;
 sounds.typing.volume = 0.2;
 sounds.unlock.volume = 0.3;
@@ -728,6 +728,8 @@ sounds.ambient.loop = true;
 sounds.vo1.volume = 1.0;
 sounds.vo2.volume = 1.0;
 sounds.vo3.volume = 1.0;
+sounds.vo4.volume = 1.0;
+sounds.vo5.volume = 1.0;
 
 let isMuted = false;
 const audioTimers = [];
@@ -786,23 +788,31 @@ function scheduleSFX() {
   // Ambient
   sounds.ambient.play().catch(() => {});
 
-  // Ambient ducking — synced to VO
-  scheduleCallback(0, () => duckAmbient(0.02, 800));        // VO1 starts
-  scheduleCallback(34000, () => duckAmbient(0.02, 800));     // VO2 starts
-  scheduleCallback(73000, () => duckAmbient(0.02, 800));     // VO3 starts
-  scheduleCallback(84000, () => duckAmbient(0.10, 1200));    // VO3 ends, build for 7AM
-  scheduleCallback(94000, () => duckAmbient(0, 2000));       // fade out with closing
+  // Ambient ducking — synced to 5 VO clips
+  scheduleCallback(0, () => duckAmbient(0.02, 800));           // VO1 starts
+  scheduleCallback(13000, () => duckAmbient(0.06, 1200));      // VO1 ends
+  scheduleCallback(20050, () => duckAmbient(0.02, 800));       // VO2 starts
+  scheduleCallback(30050, () => duckAmbient(0.06, 1200));      // VO2 ends
+  scheduleCallback(34210, () => duckAmbient(0.02, 800));       // VO3 starts
+  scheduleCallback(43210, () => duckAmbient(0.06, 1200));      // VO3 ends
+  scheduleCallback(51310, () => duckAmbient(0.12, 2000));      // 7AM build
+  scheduleCallback(60860, () => duckAmbient(0.02, 800));       // VO4 starts
+  scheduleCallback(68860, () => duckAmbient(0.08, 1200));      // VO4 ends
+  scheduleCallback(76360, () => duckAmbient(0.02, 800));       // VO5 starts
+  scheduleCallback(78360, () => duckAmbient(0, 2000));         // VO5 ends, fade out
 
   // VO clips
   scheduleSound('vo1', 0);
-  scheduleSound('vo2', 34000);
-  scheduleSound('vo3', 73000);
+  scheduleSound('vo2', 20050);
+  scheduleSound('vo3', 34210);
+  scheduleSound('vo4', 60860);
+  scheduleSound('vo5', 76360);
 
   // Scene 1
   scheduleSound('typing', 1200);
   scheduleSound('send', 1850);
-  scheduleSound('pursue', 11300);
-  scheduleSound('pursue', 15700);
+  scheduleSound('pursue', 11450);
+  scheduleSound('pursue', 15850);
 
   // Scene 2
   scheduleSound('typing', 20450);
