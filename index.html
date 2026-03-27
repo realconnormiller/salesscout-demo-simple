@@ -863,7 +863,15 @@ function scheduleSFX() {
   scheduleSound('typing', 0);
   scheduleSound('send', 1600);
   scheduleSound('pursue', 10800);
-  scheduleSound('pursue2', 16400);
+  // Second pursue uses fresh Audio instance to avoid reuse delay
+  scheduleCallback(16400, () => {
+    try {
+      const p = new Audio('audio/pursue.mp3');
+      p.volume = 0.6;
+      p.play().catch(() => {});
+      console.log('[Audio] Playing: pursue2 (fresh) @ vol 0.6');
+    } catch(e) {}
+  });
 
   // Scene 2
   scheduleSound('send', 21010);
