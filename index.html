@@ -571,7 +571,7 @@ body {
   font-family: 'Inter', sans-serif;
   color: rgba(77, 184, 255, 0.8);
   pointer-events: none;
-  z-index: 0;
+  z-index: 5;
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 800ms ease, transform 800ms ease;
@@ -768,7 +768,7 @@ body {
   <div class="bm-line"></div>
 </div>
 <canvas id="dataCanvas" width="1920" height="1080"></canvas>
-<div id="badgeContainer"></div>
+<div id="badgeContainer" style="position:fixed;inset:0;pointer-events:none;z-index:5;"></div>
 
 <div class="layout">
   <!-- LEFT COLUMN — Phone -->
@@ -1134,7 +1134,7 @@ function scheduleSFX() {
   scheduleSound('vo2', 26500);     // 24s → ends 50500
   scheduleSound('vo4', 52000);     // 11s → ends 63000
   scheduleSound('vo3', 67000);     // 12s → ends 79000
-  scheduleSound('vo5', 80200);     // 2s  → ends 82200
+  scheduleSound('vo5', 80700);     // 2s  → ends 82700
 
   // Ambient ducking
   scheduleCallback(3500, () => duckAmbient(0.15, 800));        // VO starts — duck to 30%
