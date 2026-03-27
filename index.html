@@ -396,7 +396,7 @@ body {
   opacity: 1; transition: opacity 600ms ease;
   pointer-events: none;
 }
-.intro-overlay.hidden { opacity: 0; }
+.intro-overlay.hidden { opacity: 0; pointer-events: none; }
 .intro-text {
   font-size: 42px; font-weight: 600; letter-spacing: -0.5px;
   color: #fff; opacity: 0; transform: translateY(12px);
@@ -709,7 +709,7 @@ body {
 </style>
 </head>
 <body>
-<div class="intro-overlay" id="introOverlay">
+<div class="intro-overlay hidden" id="introOverlay">
   <div class="intro-text" id="introText">This is <span class="blue">SalesScout</span></div>
   <div class="intro-sub" id="introSub">Watch what happens next.</div>
 </div>
