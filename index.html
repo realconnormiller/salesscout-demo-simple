@@ -1123,103 +1123,200 @@ async function runDemo() {
   startBtn.textContent = 'Start Demo';
 }
 // =============================================================
-// DEBUG OVERLAY — temporary, remove after calibration
+// DEBUG — temporary, remove after calibration
 // =============================================================
-const DEMO_TOTAL_MS = 95000; // approximate total demo length for timeline
-const SCENE_MARKERS = [
-  { ms: 0, label: 'S1' },
-  { ms: 20050, label: 'S2' },
-  { ms: 34210, label: 'S3' },
-  { ms: 42460, label: 'S4' },
-  { ms: 51310, label: '7AM' },
-  { ms: 76360, label: 'END' },
-];
-let debugStart = 0;
-let debugInterval = null;
-let debugPaused = false;
-let debugPausedAt = 0;
-let debugElapsed = 0;
-
-// Create debug DOM after a tick so elements exist
-setTimeout(() => {
-  const dTimer = document.getElementById('debugTimer');
-  const dScene = document.getElementById('debugScene');
-  const dPause = document.getElementById('debugPauseBtn');
-  const dBar = document.getElementById('debugProgress');
-  const dHead = document.getElementById('debugPlayhead');
-  const dTime = document.getElementById('debugBarTime');
-
-  // Add marker ticks to timeline
-  const dMarkers = document.getElementById('debugMarkers');
-  SCENE_MARKERS.forEach(m => {
-    const tick = document.createElement('div');
-    tick.style.cssText = 'position:absolute;top:0;height:100%;width:1px;background:#4db8ff;';
-    tick.style.left = ((m.ms / DEMO_TOTAL_MS) * 100) + '%';
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'position:absolute;top:-16px;font-size:10px;color:#4db8ff;transform:translateX(-50%);white-space:nowrap;';
-    lbl.style.left = ((m.ms / DEMO_TOTAL_MS) * 100) + '%';
-    lbl.textContent = m.label;
-    dMarkers.appendChild(tick);
-    dMarkers.appendChild(lbl);
-  });
-
-  window._debugSetScene = label => { if (dScene) dScene.textContent = label; };
-  window._debugStartTimer = () => {
-    debugStart = performance.now();
-    debugPaused = false;
-    if (debugInterval) clearInterval(debugInterval);
-    debugInterval = setInterval(() => {
-      if (!debugPaused) {
-        debugElapsed = Math.round(performance.now() - debugStart);
-        dTimer.textContent = 'T: ' + debugElapsed.toLocaleString() + 'ms';
-        // Update timeline bar
-        const pct = Math.min((debugElapsed / DEMO_TOTAL_MS) * 100, 100);
-        dBar.style.width = pct + '%';
-        dHead.style.left = pct + '%';
-        const secs = (debugElapsed / 1000).toFixed(1);
-        const total = (DEMO_TOTAL_MS / 1000).toFixed(0);
-        dTime.textContent = secs + 's / ' + total + 's';
-      }
-    }, 50);
-  };
-  window._debugStopTimer = () => {
-    if (debugInterval) { clearInterval(debugInterval); debugInterval = null; }
-    dTimer.textContent = 'T: done';
-    dScene.textContent = 'Done';
-  };
-
-  if (dPause) dPause.addEventListener('click', () => {
-    if (!debugPaused) {
-      debugPaused = true;
-      debugPausedAt = performance.now();
-      Object.values(sounds).forEach(s => { try { s.pause(); } catch(e) {} });
-      dPause.textContent = '\u25B6 Resume';
-    } else {
-      debugStart += performance.now() - debugPausedAt;
-      debugPaused = false;
-      Object.values(sounds).forEach(s => { try { if (s.currentTime > 0 && s.paused) s.play().catch(()=>{}); } catch(e) {} });
-      dPause.textContent = '\u23F8 Pause';
-    }
-  });
-}, 0);
-
-function debugSetScene(l) { if (window._debugSetScene) window._debugSetScene(l); }
-function debugStartTimer() { if (window._debugStartTimer) window._debugStartTimer(); }
-function debugStopTimer() { if (window._debugStopTimer) window._debugStopTimer(); }
+function debugSetScene() {}
+function debugStartTimer() {}
+function debugStopTimer() {}
 </script>
 
-<!-- Debug overlay elements -->
-<div id="debugTimer" style="position:fixed;top:12px;right:12px;background:rgba(0,0,0,0.85);color:#fff;font-size:14px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">T: 0ms</div>
-<div id="debugScene" style="position:fixed;top:12px;right:140px;background:rgba(0,0,0,0.85);color:#4db8ff;font-size:13px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">Idle</div>
-<!-- Timeline bar -->
-<div style="position:fixed;bottom:0;left:0;right:0;height:40px;background:#111;z-index:9999;display:flex;align-items:center;padding:0 16px;gap:12px;">
-  <div id="debugBarTime" style="font-size:11px;font-family:monospace;color:#888;width:90px;flex-shrink:0">0.0s / 95s</div>
-  <div style="flex:1;position:relative;height:6px;background:#222;border-radius:3px;overflow:visible;">
-    <div id="debugMarkers" style="position:absolute;inset:0;"></div>
-    <div id="debugProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#1a6fff,#4db8ff);border-radius:3px;position:relative;z-index:1;transition:width 50ms linear;"></div>
-    <div id="debugPlayhead" style="position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:12px;height:12px;background:#fff;border-radius:50%;z-index:2;box-shadow:0 0 6px rgba(26,111,255,0.5);transition:left 50ms linear;"></div>
+<!-- Debug UI — all DOM first, then script -->
+<div id="debugTimer" style="position:fixed;top:12px;right:12px;background:rgba(0,0,0,0.9);color:#fff;font-size:14px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">T: 0ms</div>
+<div id="debugScene" style="position:fixed;top:12px;right:140px;background:rgba(0,0,0,0.9);color:#4db8ff;font-size:13px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">Idle</div>
+<div id="debugBar" style="position:fixed;bottom:0;left:0;right:0;height:48px;background:#0a0a0a;border-top:1px solid #222;z-index:9999;display:flex;align-items:center;padding:0 16px;gap:12px;">
+  <button id="dbPause" style="background:none;border:1px solid #444;color:#fff;font-size:18px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:monospace;width:36px">&#x23F8;</button>
+  <div id="dbTimeL" style="font-size:12px;font-family:monospace;color:#aaa;width:56px;text-align:right;flex-shrink:0">0:00</div>
+  <div id="dbTrack" style="flex:1;position:relative;height:8px;background:#222;border-radius:4px;cursor:pointer;user-select:none;">
+    <div id="dbMarkers" style="position:absolute;inset:0;pointer-events:none;"></div>
+    <div id="dbFill" style="height:100%;width:0%;background:linear-gradient(90deg,#1a6fff,#4db8ff);border-radius:4px;pointer-events:none;"></div>
+    <div id="dbHead" style="position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:16px;height:16px;background:#fff;border-radius:50%;z-index:3;box-shadow:0 0 8px rgba(26,111,255,0.6);cursor:grab;"></div>
   </div>
+  <div id="dbTimeR" style="font-size:12px;font-family:monospace;color:#666;width:56px;flex-shrink:0">1:35</div>
 </div>
+
+<script>
+// Debug controller — runs after DOM exists
+(function() {
+  const TOTAL = 95000;
+  const MARKERS = [
+    { ms: 0, label: 'S1', color: '#4db8ff' },
+    { ms: 20050, label: 'S2', color: '#4db8ff' },
+    { ms: 34210, label: 'S3', color: '#4db8ff' },
+    { ms: 42460, label: 'S4', color: '#4db8ff' },
+    { ms: 51310, label: '7AM', color: '#ff9500' },
+    { ms: 76360, label: 'Close', color: '#ff3b30' },
+  ];
+  const SCENES = [
+    [0, 'Scene 1 — Query'],
+    [20050, 'Scene 2 — Outreach'],
+    [34210, 'Scene 3 — Discovery'],
+    [42460, 'Scene 4 — Pipeline'],
+    [51310, '7AM Sequence'],
+    [76360, 'Closing'],
+  ];
+
+  const els = {
+    timer: document.getElementById('debugTimer'),
+    scene: document.getElementById('debugScene'),
+    pause: document.getElementById('dbPause'),
+    track: document.getElementById('dbTrack'),
+    fill:  document.getElementById('dbFill'),
+    head:  document.getElementById('dbHead'),
+    timeL: document.getElementById('dbTimeL'),
+    timeR: document.getElementById('dbTimeR'),
+    markers: document.getElementById('dbMarkers'),
+  };
+
+  // Render markers
+  MARKERS.forEach(m => {
+    const pct = (m.ms / TOTAL * 100) + '%';
+    const tick = document.createElement('div');
+    tick.style.cssText = 'position:absolute;top:-2px;width:1px;height:12px;background:' + m.color + ';opacity:0.7;';
+    tick.style.left = pct;
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'position:absolute;top:-18px;font-size:9px;font-family:monospace;color:' + m.color + ';transform:translateX(-50%);white-space:nowrap;';
+    lbl.style.left = pct;
+    lbl.textContent = m.label;
+    els.markers.appendChild(tick);
+    els.markers.appendChild(lbl);
+  });
+
+  let startT = 0, elapsed = 0, paused = false, pausedAt = 0, interval = null, active = false;
+
+  function fmt(ms) {
+    const s = Math.floor(ms / 1000);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function updateUI() {
+    const pct = Math.min(elapsed / TOTAL * 100, 100);
+    els.fill.style.width = pct + '%';
+    els.head.style.left = pct + '%';
+    els.timer.textContent = 'T: ' + elapsed.toLocaleString() + 'ms';
+    els.timeL.textContent = fmt(elapsed);
+    // Scene label
+    let lbl = 'Idle';
+    for (let i = SCENES.length - 1; i >= 0; i--) {
+      if (elapsed >= SCENES[i][0]) { lbl = SCENES[i][1]; break; }
+    }
+    els.scene.textContent = lbl;
+  }
+
+  function tick() {
+    if (!paused && active) {
+      elapsed = Math.round(performance.now() - startT);
+      updateUI();
+    }
+  }
+
+  // Seek all audio to a given ms position
+  function seekTo(ms) {
+    elapsed = ms;
+    startT = performance.now() - ms;
+    // Seek VO clips — find which one should be playing
+    const voSchedule = [
+      { key: 'vo1', start: 0 },
+      { key: 'vo2', start: 20050 },
+      { key: 'vo3', start: 34210 },
+      { key: 'vo4', start: 60860 },
+      { key: 'vo5', start: 76360 },
+    ];
+    // Stop all VO first
+    voSchedule.forEach(v => {
+      try { sounds[v.key].pause(); sounds[v.key].currentTime = 0; } catch(e) {}
+    });
+    // Find current VO and seek into it
+    for (let i = voSchedule.length - 1; i >= 0; i--) {
+      const v = voSchedule[i];
+      if (ms >= v.start) {
+        const offset = (ms - v.start) / 1000;
+        try {
+          sounds[v.key].currentTime = offset;
+          if (!paused) sounds[v.key].play().catch(() => {});
+        } catch(e) {}
+        break;
+      }
+    }
+    // Seek ambient
+    try {
+      sounds.ambient.currentTime = ms / 1000;
+      if (!paused) sounds.ambient.play().catch(() => {});
+    } catch(e) {}
+    updateUI();
+  }
+
+  // Pause / Resume
+  els.pause.addEventListener('click', () => {
+    if (!active) return;
+    if (!paused) {
+      paused = true;
+      pausedAt = performance.now();
+      Object.values(sounds).forEach(s => { try { s.pause(); } catch(e) {} });
+      els.pause.innerHTML = '&#x25B6;';
+    } else {
+      startT += performance.now() - pausedAt;
+      paused = false;
+      // Resume audio that has a currentTime > 0
+      Object.values(sounds).forEach(s => {
+        try { if (s.currentTime > 0 && s.currentTime < s.duration) s.play().catch(() => {}); } catch(e) {}
+      });
+      els.pause.innerHTML = '&#x23F8;';
+    }
+  });
+
+  // Click on track to seek
+  function getClickMs(e) {
+    const rect = els.track.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    return Math.round(pct * TOTAL);
+  }
+
+  els.track.addEventListener('mousedown', e => {
+    if (!active) return;
+    seekTo(getClickMs(e));
+    const onMove = ev => seekTo(getClickMs(ev));
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  // Touch support
+  els.track.addEventListener('touchstart', e => {
+    if (!active) return;
+    seekTo(getClickMs(e.touches[0]));
+    const onMove = ev => { ev.preventDefault(); seekTo(getClickMs(ev.touches[0])); };
+    const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }, { passive: false });
+
+  // Public API
+  window.debugSetScene = function(label) { els.scene.textContent = label; };
+  window.debugStartTimer = function() {
+    active = true; paused = false; elapsed = 0;
+    startT = performance.now();
+    els.pause.innerHTML = '&#x23F8;';
+    if (interval) clearInterval(interval);
+    interval = setInterval(tick, 50);
+  };
+  window.debugStopTimer = function() {
+    active = false;
+    if (interval) { clearInterval(interval); interval = null; }
+    els.timer.textContent = 'T: done';
+    els.scene.textContent = 'Done';
+  };
+})();
+</script>
 
 </body>
 </html>
