@@ -790,7 +790,7 @@ function scheduleSFX() {
   sounds.ambient.play().catch(() => {});
 
   // Ambient ducking — synced to 5 VO clips
-  scheduleCallback(0, () => duckAmbient(0.02, 800));           // VO1 starts
+  scheduleCallback(1000, () => duckAmbient(0.02, 800));         // VO1 starts
   scheduleCallback(13000, () => duckAmbient(0.06, 1200));      // VO1 ends
   scheduleCallback(20050, () => duckAmbient(0.02, 800));       // VO2 starts
   scheduleCallback(30050, () => duckAmbient(0.06, 1200));      // VO2 ends
@@ -803,28 +803,24 @@ function scheduleSFX() {
   scheduleCallback(78360, () => duckAmbient(0, 2000));         // VO5 ends, fade out
 
   // VO clips
-  scheduleSound('vo1', 0);
+  scheduleSound('vo1', 1000);
   scheduleSound('vo2', 20050);
   scheduleSound('vo3', 34210);
   scheduleSound('vo4', 60860);
   scheduleSound('vo5', 76360);
 
-  // Scene 1
-  scheduleSound('typing', 1200);
-  scheduleSound('send', 1850);
+  // Scene 1 (typing removed — was causing unwanted noise)
+  scheduleSound('send', 2200);
   scheduleSound('pursue', 11450);
   scheduleSound('pursue', 15850);
 
   // Scene 2
-  scheduleSound('typing', 20450);
   scheduleSound('send', 21010);
 
   // Scene 3
-  scheduleSound('typing', 34610);
   scheduleSound('send', 35260);
 
   // Scene 4
-  scheduleSound('typing', 42860);
   scheduleSound('send', 43510);
 
   // 7AM sequence
