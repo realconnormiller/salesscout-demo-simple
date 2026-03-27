@@ -1145,11 +1145,11 @@ requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
 setTimeout(() => {
   // Try to start ambient (will fail silently if no user gesture yet)
   sounds.ambient.play().catch(() => {});
-  // Fade out intro after 3 seconds
+  // Fade out intro after 1.5 seconds
   setTimeout(() => {
     const overlay = document.getElementById('introOverlay');
     if (overlay) overlay.classList.add('hidden');
-  }, 3000);
+  }, 1500);
 }, 500);
 
 // Rotating FOMO stats
