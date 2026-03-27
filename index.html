@@ -721,23 +721,23 @@ const sounds = {
   vo4:     new Audio('audio/vo-clip4.wav'),
   vo5:     new Audio('audio/vo-clip5.wav'),
 };
-// Volumes — tuned for both desktop and mobile
-sounds.send.volume = 0.08;
-sounds.typing.volume = 0.06;
-sounds.lock.volume = 0.25;
-sounds.unlock.volume = 0.25;
-sounds.pursue.volume = 0.12;
-sounds.pursue2.volume = 0.12;
+// Volumes
+sounds.send.volume = 0.03;
+sounds.typing.volume = 0.02;
+sounds.lock.volume = 0.08;
+sounds.unlock.volume = 0.08;
+sounds.pursue.volume = 0.05;
+sounds.pursue2.volume = 0.05;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
-sounds.chime.volume = 0.15;
-sounds.ambient.volume = 0.015;
+sounds.chime.volume = 0.06;
+sounds.ambient.volume = 0.005;
 sounds.ambient.loop = true;
-sounds.vo1.volume = 0.35;
-sounds.vo2.volume = 0.35;
-sounds.vo3.volume = 0.35;
-sounds.vo4.volume = 0.35;
-sounds.vo5.volume = 0.35;
+sounds.vo1.volume = 0.15;
+sounds.vo2.volume = 0.15;
+sounds.vo3.volume = 0.15;
+sounds.vo4.volume = 0.15;
+sounds.vo5.volume = 0.15;
 
 let isMuted = false;
 let audioTimerIds = [];      // active setTimeout IDs
