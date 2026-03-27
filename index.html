@@ -841,8 +841,8 @@ function resetAudio() {
 }
 
 function scheduleSFX() {
-  // Ambient
-  sounds.ambient.play().catch(() => {});
+  // Ambient — disabled for testing
+  // sounds.ambient.play().catch(() => {});
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
