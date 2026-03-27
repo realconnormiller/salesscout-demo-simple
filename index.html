@@ -841,15 +841,18 @@ function resetAudio() {
 }
 
 function scheduleSFX() {
-  // Ambient — desktop only (too loud on mobile speakers)
+  // Unlock all audio elements on iOS by touching each one
   const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  if (isTouch) {
+    Object.values(sounds).forEach(s => {
+      const origVol = s.volume;
+      s.volume = 0;
+      s.play().then(() => { s.pause(); s.currentTime = 0; s.volume = origVol; }).catch(() => { s.volume = origVol; });
+    });
+  }
+  // Ambient — desktop only
   if (!isTouch) {
     sounds.ambient.play().catch(() => {});
-  } else {
-    // iOS requires a play() from user gesture to unlock audio
-    // Play ambient silently then immediately pause to unlock the context
-    sounds.ambient.volume = 0;
-    sounds.ambient.play().then(() => { sounds.ambient.pause(); sounds.ambient.currentTime = 0; }).catch(() => {});
   }
 
   // VO clips
