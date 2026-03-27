@@ -855,7 +855,8 @@ function scheduleSFX() {
   scheduleCallback(61500, () => duckAmbient(0.02, 800));       // VO4 starts (61500)
   scheduleCallback(69500, () => duckAmbient(0.08, 1200));      // VO4 ends (61500+8s)
   scheduleCallback(77200, () => duckAmbient(0.02, 800));       // VO5 starts (77200)
-  scheduleCallback(79200, () => duckAmbient(0, 2000));         // VO5 ends, fade out
+  scheduleCallback(79200, () => duckAmbient(0.06, 1200));      // VO5 ends, ambient back up
+  scheduleCallback(88000, () => duckAmbient(0, 3000));         // fade out at end of closing card
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
