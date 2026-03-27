@@ -1069,8 +1069,7 @@ function resetAudio() {
 }
 
 function scheduleSFX() {
-  // Ambient — file is pre-normalized to -20dB
-  sounds.ambient.play().catch(() => {});
+  // Ambient already started during intro — don't restart
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
@@ -1677,6 +1676,10 @@ async function runDemo() {
   resetAll();
   resetPipelineCounter();
 
+  // Start ambient music during intro
+  sounds.ambient.currentTime = 0;
+  sounds.ambient.play().catch(() => {});
+
   // Intro animation — "This is SalesScout"
   await playIntro();
 
@@ -1684,7 +1687,7 @@ async function runDemo() {
   msgBox.scrollTop = msgBox.scrollHeight;
   await sleep(800);
 
-  // Start audio timeline from this point
+  // Start VO + SFX timeline (ambient already playing)
   scheduleSFX();
 
   for (let i = 0; i < CONFIG.scenes.length; i++) {
