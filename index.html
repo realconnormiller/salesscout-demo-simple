@@ -842,8 +842,6 @@ function resetAudio() {
 
 function scheduleSFX() {
   // Ambient — file is pre-normalized to -20dB
-  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if (isTouch) sounds.ambient.volume = 0.3;
   sounds.ambient.play().catch(() => {});
 
   // VO clips
