@@ -722,22 +722,22 @@ const sounds = {
   vo5:     new Audio('audio/vo-clip5.wav'),
 };
 // Volumes
-sounds.send.volume = 0.08;
-sounds.typing.volume = 0.06;
-sounds.lock.volume = 0.15;
-sounds.unlock.volume = 0.15;
-sounds.pursue.volume = 0.12;
-sounds.pursue2.volume = 0.12;
+sounds.send.volume = 0.3;
+sounds.typing.volume = 0.2;
+sounds.lock.volume = 0.5;
+sounds.unlock.volume = 0.5;
+sounds.pursue.volume = 0.4;
+sounds.pursue2.volume = 0.4;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
-sounds.chime.volume = 0.10;
+sounds.chime.volume = 0.35;
 sounds.ambient.volume = 0.5;
 sounds.ambient.loop = true;
-sounds.vo1.volume = 0.55;
-sounds.vo2.volume = 0.55;
-sounds.vo3.volume = 0.55;
-sounds.vo4.volume = 0.55;
-sounds.vo5.volume = 0.55;
+sounds.vo1.volume = 0.85;
+sounds.vo2.volume = 0.85;
+sounds.vo3.volume = 0.85;
+sounds.vo4.volume = 0.85;
+sounds.vo5.volume = 0.85;
 
 let isMuted = false;
 let audioTimerIds = [];      // active setTimeout IDs
@@ -837,7 +837,7 @@ function resetAudio() {
   Object.values(sounds).forEach(s => {
     try { s.pause(); s.currentTime = 0; } catch(e) {}
   });
-  sounds.ambient.volume = 0.03;
+  sounds.ambient.volume = 0.5;
 }
 
 function scheduleSFX() {
