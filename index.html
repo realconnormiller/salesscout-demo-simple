@@ -709,9 +709,9 @@ body {
 </style>
 </head>
 <body>
-<div class="intro-overlay hidden" id="introOverlay">
-  <div class="intro-text" id="introText">This is <span class="blue">SalesScout</span></div>
-  <div class="intro-sub" id="introSub">Watch what happens next.</div>
+<div class="intro-overlay" id="introOverlay">
+  <div class="intro-text show" id="introText">This is <span class="blue">SalesScout</span></div>
+  <div class="intro-sub show" id="introSub">Watch what happens next.</div>
 </div>
 <canvas id="dataCanvas" width="1920" height="1080"></canvas>
 <div id="badgeContainer"></div>
@@ -1069,7 +1069,8 @@ function resetAudio() {
 }
 
 function scheduleSFX() {
-  // Ambient already started during intro — don't restart
+  // Ambient — ensure it's playing (may have started on page load)
+  sounds.ambient.play().catch(() => {});
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
@@ -1139,6 +1140,17 @@ $('#watchAgain').addEventListener('click', () => { running = false; runDemo(); }
 
 // Auto-scroll to bottom on page load
 requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
+
+// Intro auto-fade on page load — music starts, fades to demo after 3s
+setTimeout(() => {
+  // Try to start ambient (will fail silently if no user gesture yet)
+  sounds.ambient.play().catch(() => {});
+  // Fade out intro after 3 seconds
+  setTimeout(() => {
+    const overlay = document.getElementById('introOverlay');
+    if (overlay) overlay.classList.add('hidden');
+  }, 3000);
+}, 500);
 
 // Rotating FOMO stats
 let statIdx = 0;
@@ -1675,13 +1687,6 @@ async function runDemo() {
 
   resetAll();
   resetPipelineCounter();
-
-  // Start ambient music during intro
-  sounds.ambient.currentTime = 0;
-  sounds.ambient.play().catch(() => {});
-
-  // Intro animation — "This is SalesScout"
-  await playIntro();
 
   debugStartTimer();
   msgBox.scrollTop = msgBox.scrollHeight;
