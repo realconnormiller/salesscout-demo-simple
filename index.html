@@ -711,6 +711,7 @@ const sounds = {
   typing:  new Audio('audio/typing.mp3'),
   unlock:  new Audio('audio/unlock.mp3'),
   pursue:  new Audio('audio/pursue.mp3'),
+  pursue2: new Audio('audio/pursue.mp3'),
   chime:   new Audio('audio/chime.mp3'),
   ambient: new Audio('audio/ambient.mp3'),
   vo1:     new Audio('audio/vo-clip1.wav'),
@@ -723,6 +724,7 @@ sounds.send.volume = 0.4;
 sounds.typing.volume = 0.2;
 sounds.unlock.volume = 0.3;
 sounds.pursue.volume = 0.6;
+sounds.pursue2.volume = 0.6;
 sounds.chime.volume = 0.5;
 sounds.ambient.volume = 0.06;
 sounds.ambient.loop = true;
@@ -861,7 +863,7 @@ function scheduleSFX() {
   scheduleSound('typing', 0);
   scheduleSound('send', 1600);
   scheduleSound('pursue', 10800);
-  scheduleSound('pursue', 16400);
+  scheduleSound('pursue2', 16400);
 
   // Scene 2
   scheduleSound('send', 21010);
