@@ -850,10 +850,9 @@ function scheduleSFX() {
       s.play().then(() => { s.pause(); s.currentTime = 0; s.volume = origVol; }).catch(() => { s.volume = origVol; });
     });
   }
-  // Ambient — desktop only
-  if (!isTouch) {
-    sounds.ambient.play().catch(() => {});
-  }
+  // Ambient — lower on mobile
+  if (isTouch) sounds.ambient.volume = 0.003;
+  sounds.ambient.play().catch(() => {});
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
