@@ -402,6 +402,47 @@ body {
   from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+/* Pipeline tease card */
+.pipeline-tease {
+  align-self: flex-start;
+  max-width: 88%;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #888;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.pipeline-tease.show {
+  animation: fadeSlideUp 400ms ease-out forwards;
+}
+.pipeline-tease .tease-header {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4db8ff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.pipeline-tease .tease-line {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: #999;
+}
+.pipeline-tease .tease-line:last-child { margin-bottom: 0; }
+.pipeline-tease .tease-label {
+  color: #ccc;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.pipeline-tease .tease-desc {
+  color: #777;
+}
+
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -947,6 +988,23 @@ function addBubble(type, text, style, preloaded) {
   return div;
 }
 
+function showPipelineTease() {
+  const card = document.createElement('div');
+  card.className = 'pipeline-tease';
+  card.innerHTML = `
+    <div class="tease-header">Coming soon</div>
+    <div class="tease-line"><span class="tease-label">Import records</span><span class="tease-desc">— see exactly who's shipping what, and with which carriers</span></div>
+    <div class="tease-line"><span class="tease-label">SEC filings</span><span class="tease-desc">— find transportation cost pressure before competitors do</span></div>
+    <div class="tease-line"><span class="tease-label">Building permits</span><span class="tease-desc">— spot facility expansions 6-12 months before the news</span></div>
+    <div class="tease-line"><span class="tease-label">Satellite monitoring</span><span class="tease-desc">— know when a site is active before they announce it</span></div>
+  `;
+  msgBox.appendChild(card);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    card.classList.add('show');
+    scroll();
+  }));
+}
+
 function addTimestamp(text) {
   const div = document.createElement('div');
   div.className = 'timestamp';
@@ -1049,7 +1107,13 @@ async function playScene(scene) {
     if (wordCount(r.text) > 20) gap += t.longBubbleExtra;
     if (r.style === 'decision') gap += t.decisionPause;
     if (r.extraPause === 'vibrantHealth') gap = t.vibrantHealthPause;
-    if (r.extraPause === 'outreach') gap = t.outreachPause;
+    if (r.extraPause === 'outreach') {
+      // Show pipeline tease card during outreach pause
+      await sleep(1500);
+      showPipelineTease();
+      await sleep(t.outreachPause - 1500);
+      continue;
+    }
     await sleep(gap);
   }
 }
