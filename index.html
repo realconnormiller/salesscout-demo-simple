@@ -721,26 +721,27 @@ const sounds = {
   vo4:     new Audio('audio/vo-clip4.wav'),
   vo5:     new Audio('audio/vo-clip5.wav'),
 };
-// Detect mobile for volume scaling
-const _mob = window.innerWidth <= 768;
+// Detect mobile — check touch + user agent + screen size
+const _mob = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
 const _v = (desktop, mobile) => _mob ? mobile : desktop;
+console.log('[Audio] Mobile detected:', _mob, 'width:', window.innerWidth);
 
-sounds.send.volume = _v(0.15, 0.04);
-sounds.typing.volume = _v(0.12, 0.03);
-sounds.lock.volume = _v(0.7, 0.15);
-sounds.unlock.volume = _v(0.7, 0.15);
-sounds.pursue.volume = _v(0.25, 0.06);
-sounds.pursue2.volume = _v(0.25, 0.06);
+sounds.send.volume = _v(0.15, 0.02);
+sounds.typing.volume = _v(0.12, 0.015);
+sounds.lock.volume = _v(0.7, 0.06);
+sounds.unlock.volume = _v(0.7, 0.06);
+sounds.pursue.volume = _v(0.25, 0.03);
+sounds.pursue2.volume = _v(0.25, 0.03);
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
-sounds.chime.volume = _v(0.35, 0.08);
-sounds.ambient.volume = _v(0.03, 0.008);
+sounds.chime.volume = _v(0.35, 0.04);
+sounds.ambient.volume = _v(0.03, 0.003);
 sounds.ambient.loop = true;
-sounds.vo1.volume = _v(0.7, 0.5);
-sounds.vo2.volume = _v(0.7, 0.5);
-sounds.vo3.volume = _v(0.7, 0.5);
-sounds.vo4.volume = _v(0.7, 0.5);
-sounds.vo5.volume = _v(0.7, 0.5);
+sounds.vo1.volume = _v(0.7, 0.3);
+sounds.vo2.volume = _v(0.7, 0.3);
+sounds.vo3.volume = _v(0.7, 0.3);
+sounds.vo4.volume = _v(0.7, 0.3);
+sounds.vo5.volume = _v(0.7, 0.3);
 
 let isMuted = false;
 let audioTimerIds = [];      // active setTimeout IDs
