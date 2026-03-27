@@ -786,18 +786,17 @@ function scheduleSFX() {
   // Ambient
   sounds.ambient.play().catch(() => {});
 
-  // Ambient ducking
-  scheduleCallback(0, () => duckAmbient(0.02, 800));
-  scheduleCallback(40000, () => duckAmbient(0.06, 1200));
-  scheduleCallback(50000, () => duckAmbient(0.02, 800));
-  scheduleCallback(83000, () => duckAmbient(0.10, 1200));
-  scheduleCallback(88000, () => duckAmbient(0.02, 800));
-  scheduleCallback(94000, () => duckAmbient(0, 2000));
+  // Ambient ducking — synced to VO
+  scheduleCallback(0, () => duckAmbient(0.02, 800));        // VO1 starts
+  scheduleCallback(34000, () => duckAmbient(0.02, 800));     // VO2 starts
+  scheduleCallback(73000, () => duckAmbient(0.02, 800));     // VO3 starts
+  scheduleCallback(84000, () => duckAmbient(0.10, 1200));    // VO3 ends, build for 7AM
+  scheduleCallback(94000, () => duckAmbient(0, 2000));       // fade out with closing
 
   // VO clips
   scheduleSound('vo1', 0);
-  scheduleSound('vo2', 40000);
-  scheduleSound('vo3', 83000);
+  scheduleSound('vo2', 34000);
+  scheduleSound('vo3', 73000);
 
   // Scene 1
   scheduleSound('typing', 1200);
