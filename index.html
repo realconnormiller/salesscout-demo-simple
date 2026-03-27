@@ -731,13 +731,13 @@ sounds.pursue2.volume = 0.05;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
 sounds.chime.volume = 0.06;
-sounds.ambient.volume = 0.005;
+sounds.ambient.volume = 0.0005;
 sounds.ambient.loop = true;
-sounds.vo1.volume = 0.15;
-sounds.vo2.volume = 0.15;
-sounds.vo3.volume = 0.15;
-sounds.vo4.volume = 0.15;
-sounds.vo5.volume = 0.15;
+sounds.vo1.volume = 0.35;
+sounds.vo2.volume = 0.35;
+sounds.vo3.volume = 0.35;
+sounds.vo4.volume = 0.35;
+sounds.vo5.volume = 0.35;
 
 let isMuted = false;
 let audioTimerIds = [];      // active setTimeout IDs
@@ -852,16 +852,16 @@ function scheduleSFX() {
   scheduleSound('vo5', 80200);     // 2s  → ends 82200
 
   // Ambient ducking
-  scheduleCallback(3500, () => duckAmbient(0.003, 800));       // VO1 starts
-  scheduleCallback(25500, () => duckAmbient(0.015, 1200));     // VO1 ends
-  scheduleCallback(26500, () => duckAmbient(0.003, 800));      // VO2 starts
-  scheduleCallback(50500, () => duckAmbient(0.015, 1200));     // VO2 ends
-  scheduleCallback(53500, () => duckAmbient(0.003, 800));      // VO4 starts
-  scheduleCallback(64500, () => duckAmbient(0.015, 1200));     // VO4 ends
-  scheduleCallback(67000, () => duckAmbient(0.003, 800));      // VO3 starts
-  scheduleCallback(79000, () => duckAmbient(0.015, 1200));     // VO3 ends
-  scheduleCallback(80200, () => duckAmbient(0.003, 800));      // VO5 starts
-  scheduleCallback(82200, () => duckAmbient(0.015, 1200));     // VO5 ends
+  scheduleCallback(3500, () => duckAmbient(0.0003, 800));      // VO1 starts
+  scheduleCallback(25500, () => duckAmbient(0.001, 1200));     // VO1 ends
+  scheduleCallback(26500, () => duckAmbient(0.0003, 800));     // VO2 starts
+  scheduleCallback(50500, () => duckAmbient(0.001, 1200));     // VO2 ends
+  scheduleCallback(53500, () => duckAmbient(0.0003, 800));     // VO4 starts
+  scheduleCallback(64500, () => duckAmbient(0.001, 1200));     // VO4 ends
+  scheduleCallback(67000, () => duckAmbient(0.0003, 800));     // VO3 starts
+  scheduleCallback(79000, () => duckAmbient(0.001, 1200));     // VO3 ends
+  scheduleCallback(80200, () => duckAmbient(0.0003, 800));     // VO5 starts
+  scheduleCallback(82200, () => duckAmbient(0.001, 1200));     // VO5 ends
   scheduleCallback(88000, () => duckAmbient(0, 3000));         // fade out
 
   // Scene 1 SFX
