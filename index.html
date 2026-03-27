@@ -849,15 +849,16 @@ function scheduleSFX() {
   scheduleSound('vo1', 3500);      // 22s → ends 25500
   scheduleSound('vo2', 26500);     // 24s → ends 50500
   // vo3 removed
-  scheduleSound('vo4', 46000);     // 8s → ends 54000, hits 7AM lock screen
+  scheduleSound('vo4', 51500);     // 8s → ends 59500, 1s after vo2 ends
   scheduleSound('vo5', 77200);     // 2s → fires ~78500
 
   // Ambient ducking — synced to VO
   scheduleCallback(3500, () => duckAmbient(0.008, 800));       // VO1 starts
   scheduleCallback(25500, () => duckAmbient(0.03, 1200));      // VO1 ends
   scheduleCallback(26500, () => duckAmbient(0.008, 800));      // VO2 starts
-  scheduleCallback(46000, () => duckAmbient(0.008, 800));      // VO4 starts (stays ducked from VO2)
-  scheduleCallback(54000, () => duckAmbient(0.04, 1200));      // VO4 ends
+  scheduleCallback(50500, () => duckAmbient(0.03, 1200));      // VO2 ends
+  scheduleCallback(51500, () => duckAmbient(0.008, 800));      // VO4 starts
+  scheduleCallback(59500, () => duckAmbient(0.04, 1200));      // VO4 ends
   scheduleCallback(77200, () => duckAmbient(0.008, 800));      // VO5 starts
   scheduleCallback(79200, () => duckAmbient(0.03, 1200));      // VO5 ends, ambient back up
   scheduleCallback(88000, () => duckAmbient(0, 3000));         // fade out
