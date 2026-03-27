@@ -721,27 +721,23 @@ const sounds = {
   vo4:     new Audio('audio/vo-clip4.wav'),
   vo5:     new Audio('audio/vo-clip5.wav'),
 };
-// Detect mobile — check touch + user agent + screen size
-const _mob = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
-const _v = (desktop, mobile) => _mob ? mobile : desktop;
-console.log('[Audio] Mobile detected:', _mob, 'width:', window.innerWidth);
-
-sounds.send.volume = _v(0.15, 0.008);
-sounds.typing.volume = _v(0.12, 0.005);
-sounds.lock.volume = _v(0.7, 0.02);
-sounds.unlock.volume = _v(0.7, 0.02);
-sounds.pursue.volume = _v(0.25, 0.01);
-sounds.pursue2.volume = _v(0.25, 0.01);
+// Volumes — tuned for both desktop and mobile
+sounds.send.volume = 0.08;
+sounds.typing.volume = 0.06;
+sounds.lock.volume = 0.25;
+sounds.unlock.volume = 0.25;
+sounds.pursue.volume = 0.12;
+sounds.pursue2.volume = 0.12;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
-sounds.chime.volume = _v(0.35, 0.015);
-sounds.ambient.volume = _v(0.03, 0.001);
+sounds.chime.volume = 0.15;
+sounds.ambient.volume = 0.015;
 sounds.ambient.loop = true;
-sounds.vo1.volume = _v(0.7, 0.12);
-sounds.vo2.volume = _v(0.7, 0.12);
-sounds.vo3.volume = _v(0.7, 0.12);
-sounds.vo4.volume = _v(0.7, 0.12);
-sounds.vo5.volume = _v(0.7, 0.12);
+sounds.vo1.volume = 0.35;
+sounds.vo2.volume = 0.35;
+sounds.vo3.volume = 0.35;
+sounds.vo4.volume = 0.35;
+sounds.vo5.volume = 0.35;
 
 let isMuted = false;
 let audioTimerIds = [];      // active setTimeout IDs
@@ -755,8 +751,6 @@ function playSound(key, volume) {
     if (isMuted || audioPaused) return;
     if (!sounds[key]) return;
     if (volume !== undefined) sounds[key].volume = volume;
-    // Force cap on mobile — check every time, not just on load
-    if (_mob && sounds[key].volume > 0.12) sounds[key].volume = 0.12;
     sounds[key].currentTime = 0;
     sounds[key].play().catch(() => {});
   } catch(e) { console.log(`[Audio] EXCEPTION: ${key}`, e); }
@@ -846,10 +840,8 @@ function resetAudio() {
   sounds.ambient.volume = 0.03;
 }
 
-const isMobile = window.innerWidth <= 768;
-
 function scheduleSFX() {
-  // Ambient — volume already set by _v() above
+  // Ambient
   sounds.ambient.play().catch(() => {});
 
   // VO clips
@@ -859,19 +851,17 @@ function scheduleSFX() {
   scheduleSound('vo3', 66500);     // 12s → ends 78500
   scheduleSound('vo5', 80200);     // 2s  → ends 82200
 
-  // Ambient ducking — scaled for desktop/mobile
-  const _dk = _mob ? 0.002 : 0.008;  // ducked level
-  const _up = _mob ? 0.008 : 0.03;   // unducked level
-  scheduleCallback(3500, () => duckAmbient(_dk, 800));         // VO1 starts
-  scheduleCallback(25500, () => duckAmbient(_up, 1200));       // VO1 ends
-  scheduleCallback(26500, () => duckAmbient(_dk, 800));        // VO2 starts
-  scheduleCallback(50500, () => duckAmbient(_up, 1200));       // VO2 ends
-  scheduleCallback(53500, () => duckAmbient(_dk, 800));        // VO4 starts
-  scheduleCallback(64500, () => duckAmbient(_up, 1200));       // VO4 ends
-  scheduleCallback(66500, () => duckAmbient(_dk, 800));        // VO3 starts
-  scheduleCallback(78500, () => duckAmbient(_up, 1200));       // VO3 ends
-  scheduleCallback(80200, () => duckAmbient(_dk, 800));        // VO5 starts
-  scheduleCallback(82200, () => duckAmbient(_up, 1200));       // VO5 ends, ambient back up
+  // Ambient ducking
+  scheduleCallback(3500, () => duckAmbient(0.003, 800));       // VO1 starts
+  scheduleCallback(25500, () => duckAmbient(0.015, 1200));     // VO1 ends
+  scheduleCallback(26500, () => duckAmbient(0.003, 800));      // VO2 starts
+  scheduleCallback(50500, () => duckAmbient(0.015, 1200));     // VO2 ends
+  scheduleCallback(53500, () => duckAmbient(0.003, 800));      // VO4 starts
+  scheduleCallback(64500, () => duckAmbient(0.015, 1200));     // VO4 ends
+  scheduleCallback(66500, () => duckAmbient(0.003, 800));      // VO3 starts
+  scheduleCallback(78500, () => duckAmbient(0.015, 1200));     // VO3 ends
+  scheduleCallback(80200, () => duckAmbient(0.003, 800));      // VO5 starts
+  scheduleCallback(82200, () => duckAmbient(0.015, 1200));     // VO5 ends
   scheduleCallback(88000, () => duckAmbient(0, 3000));         // fade out
 
   // Scene 1 SFX
@@ -881,7 +871,7 @@ function scheduleSFX() {
   scheduleSound('pursue2', 15200);
 
   // Scene 2 SFX
-  scheduleSound('send', 21010);
+  scheduleSound('send', 21510);
 
   // Scene 3+4 SFX
   scheduleSound('send', 34800);
