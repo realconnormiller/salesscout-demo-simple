@@ -874,15 +874,11 @@ function scheduleSFX() {
   // Scene 2 SFX
   scheduleSound('send', 21010);
 
-  // Scene 3 SFX
-  scheduleSound('send', 29000);
-
-  // Scene 4 SFX
-  scheduleSound('send', 37500);
+  // Scene 3+4 SFX (one send for both)
+  scheduleSound('send', 36000);
 
   // 7AM sequence SFX
   scheduleSound('lock', 45000);
-  scheduleSound('chime', 47200);
   scheduleSound('unlock', 52200);
 
   // Closing SFX
