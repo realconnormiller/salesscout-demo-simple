@@ -711,9 +711,11 @@ class AudioManager {
     this.muted = false;
     this.ambient = null;
     this.ambientGain = null;
-    this.scheduledIds = [];
+    this.ambientBaseVol = 0.06; // current target before ducking
+    this.ducked = false;
+    this.timers = []; // all scheduled setTimeout IDs
     this.files = {
-      'vo1': 'audio/vo-clip1.wav',
+      'vo1': 'audio/vo-clip1.mp3',
       'vo2': 'audio/vo-clip2.wav',
       'vo3': 'audio/vo-clip3.wav',
       'send': 'audio/send.mp3',
@@ -730,7 +732,6 @@ class AudioManager {
     if (this.ctx) return;
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      // Load all files in parallel, fail silently per file
       await Promise.all(Object.entries(this.files).map(async ([key, url]) => {
         try {
           const res = await fetch(url);
@@ -757,11 +758,20 @@ class AudioManager {
     } catch(e) { return null; }
   }
 
-  // Schedule a sound at a future time (ms from now)
+  // Schedule a sound at delayMs from now — returns timer ID
   schedule(key, delayMs, volume = 1.0) {
-    const id = setTimeout(() => this.play(key, volume), delayMs);
-    this.scheduledIds.push(id);
-    return id;
+    const timer = setTimeout(() => {
+      this.play(key, volume);
+    }, delayMs);
+    this.timers.push(timer);
+    return timer;
+  }
+
+  // Schedule an arbitrary callback at delayMs from now
+  scheduleCallback(delayMs, fn) {
+    const timer = setTimeout(fn, delayMs);
+    this.timers.push(timer);
+    return timer;
   }
 
   startAmbient() {
@@ -771,17 +781,42 @@ class AudioManager {
       this.ambientGain = this.ctx.createGain();
       src.buffer = this.buffers.ambient;
       src.loop = true;
+      this.ambientBaseVol = 0.06;
       this.ambientGain.gain.value = 0.06;
       src.connect(this.ambientGain).connect(this.ctx.destination);
       src.start();
       this.ambient = src;
+      this.ducked = false;
     } catch(e) {}
   }
 
-  setAmbientVolume(vol, rampMs = 500) {
+  // Set the base ambient volume (before ducking)
+  setAmbientBase(vol, rampMs = 500) {
+    this.ambientBaseVol = vol;
+    if (!this.ducked) this._rampAmbient(vol, rampMs);
+  }
+
+  // Duck ambient to 30% of current base
+  duckAmbient(rampMs = 800) {
+    this.ducked = true;
+    this._rampAmbient(this.ambientBaseVol * 0.3, rampMs);
+    console.log(`[Audio] Ambient ducked to ${(this.ambientBaseVol * 0.3).toFixed(3)}`);
+  }
+
+  // Unduck — restore to full base volume
+  unduckAmbient(rampMs = 1200) {
+    this.ducked = false;
+    this._rampAmbient(this.ambientBaseVol, rampMs);
+    console.log(`[Audio] Ambient unducked to ${this.ambientBaseVol}`);
+  }
+
+  _rampAmbient(vol, rampMs) {
     if (!this.ambientGain || !this.ctx) return;
     try {
-      this.ambientGain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + rampMs / 1000);
+      const now = this.ctx.currentTime;
+      this.ambientGain.gain.cancelScheduledValues(now);
+      this.ambientGain.gain.setValueAtTime(this.ambientGain.gain.value, now);
+      this.ambientGain.gain.linearRampToValueAtTime(vol, now + rampMs / 1000);
     } catch(e) {}
   }
 
@@ -790,8 +825,8 @@ class AudioManager {
   }
 
   cancelAll() {
-    this.scheduledIds.forEach(id => clearTimeout(id));
-    this.scheduledIds = [];
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers = [];
     this.stopAmbient();
   }
 
@@ -800,24 +835,36 @@ class AudioManager {
 
 const audio = new AudioManager();
 
-// SFX timeline — all times in ms from demo start (after initial 800ms pause)
+// SFX + VO + Ambient timeline — all delayMs relative to demo start
 function scheduleSFX() {
   const a = audio;
-  // Ambient music
+
+  // ── Ambient music ──
   a.startAmbient();
-  // Ambient volume ramps
-  a.schedule('_vol', 30000, 0); setTimeout(() => a.setAmbientVolume(0.08, 2000), 30000);
-  a.schedule('_vol', 51000, 0); setTimeout(() => a.setAmbientVolume(0.12, 2000), 51000);
-  a.schedule('_vol', 60000, 0); setTimeout(() => a.setAmbientVolume(0.15, 2000), 60000);
-  a.schedule('_vol', 73000, 0); setTimeout(() => a.setAmbientVolume(0.08, 2000), 73000);
-  a.schedule('_vol', 76000, 0); setTimeout(() => a.setAmbientVolume(0.0, 3000), 76000);
+  // Base volume ramps (independent of ducking)
+  a.scheduleCallback(30000, () => a.setAmbientBase(0.08, 2000));
+  a.scheduleCallback(51000, () => a.setAmbientBase(0.12, 2000));
+  a.scheduleCallback(60000, () => a.setAmbientBase(0.15, 2000));
+  a.scheduleCallback(73000, () => a.setAmbientBase(0.08, 2000));
+  a.scheduleCallback(76000, () => a.setAmbientBase(0.0, 3000));
 
-  // VO clips
+  // ── VO clips + ducking ──
+  // Clip 1: 0ms–40000ms
   a.schedule('vo1', 0, 1.0);
-  a.schedule('vo2', 40000, 1.0);
-  a.schedule('vo3', 83000, 1.0);
+  a.scheduleCallback(0, () => a.duckAmbient(800));
+  a.scheduleCallback(40000, () => a.unduckAmbient(1200));
 
-  // Scene 1
+  // Clip 2: 50000ms–83000ms (silence gap 40000–50000)
+  a.schedule('vo2', 50000, 1.0);
+  a.scheduleCallback(50000, () => a.duckAmbient(800));
+  a.scheduleCallback(83000, () => a.unduckAmbient(1200));
+
+  // Clip 3: 83000ms–94000ms
+  a.schedule('vo3', 83000, 1.0);
+  a.scheduleCallback(83000, () => a.duckAmbient(800));
+  a.scheduleCallback(94000, () => a.setAmbientBase(0.0, 2000)); // fade out with closing
+
+  // ── Scene 1 SFX ──
   a.schedule('typing', 1200, 0.2);
   a.schedule('send', 1850, 0.4);
   a.schedule('pop', 3850, 0.2);
@@ -830,13 +877,13 @@ function scheduleSFX() {
   a.schedule('pop', 13850, 0.25);
   a.schedule('pursue', 15850, 0.6);
 
-  // Scene 2
+  // ── Scene 2 SFX ──
   a.schedule('typing', 20450, 0.2);
   a.schedule('send', 21010, 0.4);
   a.schedule('pop', 23810, 0.15);
   a.schedule('pop', 24410, 0.25);
 
-  // Scene 3
+  // ── Scene 3 SFX ──
   a.schedule('typing', 34610, 0.2);
   a.schedule('send', 35260, 0.4);
   a.schedule('pop', 37260, 0.15);
@@ -845,20 +892,20 @@ function scheduleSFX() {
   a.schedule('pop', 39460, 0.2);
   a.schedule('pop', 40260, 0.2);
 
-  // Scene 4
+  // ── Scene 4 SFX ──
   a.schedule('typing', 42860, 0.2);
   a.schedule('send', 43510, 0.4);
   a.schedule('pop', 45510, 0.2);
   a.schedule('pop', 47010, 0.2);
   a.schedule('pop', 49310, 0.2);
 
-  // 7AM sequence
+  // ── 7AM sequence SFX ──
   a.schedule('unlock', 52110, 0.3);
   a.schedule('chime', 54210, 0.5);
   a.schedule('pop', 55710, 0.3);
   a.schedule('pop', 58960, 0.25);
 
-  // Overnight bubbles
+  // ── Overnight bubble SFX ──
   a.schedule('pop', 60860, 0.3);
   a.schedule('pop', 62060, 0.2);
   a.schedule('pop', 63260, 0.2);
