@@ -402,6 +402,87 @@ body {
   from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+/* =============================================================
+   DATA STREAMS — particles flowing into phone during research
+   ============================================================= */
+.data-stream-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+  overflow: hidden;
+  border-radius: 44px;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.data-stream-container.active { opacity: 1; }
+
+.stream-particle {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  color: rgba(77, 184, 255, 0.7);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  filter: blur(0px);
+}
+.stream-particle.dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(77, 184, 255, 0.5);
+  font-size: 0;
+}
+@keyframes streamFromLeft {
+  0%   { transform: translateX(-60px); opacity: 0; }
+  15%  { opacity: 0.8; }
+  85%  { opacity: 0.6; }
+  100% { transform: translateX(180px); opacity: 0; }
+}
+@keyframes streamFromRight {
+  0%   { transform: translateX(60px); opacity: 0; }
+  15%  { opacity: 0.8; }
+  85%  { opacity: 0.6; }
+  100% { transform: translateX(-180px); opacity: 0; }
+}
+@keyframes streamFromTop {
+  0%   { transform: translateY(-40px); opacity: 0; }
+  15%  { opacity: 0.8; }
+  85%  { opacity: 0.6; }
+  100% { transform: translateY(160px); opacity: 0; }
+}
+
+/* Before/after contrast card */
+.contrast-card {
+  align-self: center;
+  text-align: center;
+  padding: 16px 20px;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.contrast-card.show {
+  animation: fadeSlideUp 500ms ease-out forwards;
+}
+.contrast-line {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.8;
+}
+.contrast-line.highlight {
+  color: #4db8ff;
+  font-weight: 500;
+  font-size: 15px;
+}
+.contrast-line .time-val {
+  font-weight: 600;
+  color: #fff;
+}
+.contrast-line.highlight .time-val {
+  color: #4db8ff;
+}
+
 /* Pipeline tease card */
 .pipeline-tease {
   align-self: flex-start;
@@ -546,6 +627,7 @@ body {
         <div class="side-btn vol-dn"></div>
         <div class="side-btn power"></div>
         <div class="screen">
+          <div class="data-stream-container" id="dataStreams"></div>
           <div class="lock-overlay" id="lockOverlay">
             <div class="lock-bg" id="lockBg"></div>
             <div class="lock-time" id="lockTime">7:00</div>
@@ -675,6 +757,7 @@ const CONFIG = {
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
       readReceipt: true,
+      streamLabels: ['Tavily', 'FMCSA', 'Indeed', 'Press releases', 'Hiring signals', 'Trigger events'],
       progress: [
         'Researching Southeast shippers\u2026',
         'Scanning recent facility announcements and trigger events\u2026',
@@ -700,6 +783,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
+      streamLabels: ['Market signals', 'Facility records', 'Decision windows'],
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -988,6 +1072,83 @@ function addBubble(type, text, style, preloaded) {
   return div;
 }
 
+// =============================================================
+// DATA STREAMS — particles flowing into phone during research
+// =============================================================
+const dataStreamsEl = document.getElementById('dataStreams');
+let streamInterval = null;
+
+function startDataStreams(labels) {
+  if (!dataStreamsEl) return;
+  dataStreamsEl.innerHTML = '';
+  dataStreamsEl.classList.add('active');
+  let labelIdx = 0;
+  let tick = 0;
+
+  streamInterval = setInterval(() => {
+    tick++;
+    // Create a particle
+    const p = document.createElement('div');
+    const isLabel = tick % 3 === 0 && labels.length > 0;
+    const isFromRight = Math.random() > 0.5;
+    const isFromTop = Math.random() > 0.7;
+
+    if (isLabel) {
+      p.className = 'stream-particle';
+      p.textContent = labels[labelIdx % labels.length];
+      labelIdx++;
+    } else {
+      p.className = 'stream-particle dot';
+    }
+
+    // Random position
+    if (isFromTop) {
+      p.style.top = '0px';
+      p.style.left = (20 + Math.random() * 60) + '%';
+      p.style.animation = `streamFromTop ${1.5 + Math.random() * 1}s ease-out forwards`;
+    } else if (isFromRight) {
+      p.style.right = '0px';
+      p.style.top = (15 + Math.random() * 60) + '%';
+      p.style.animation = `streamFromRight ${1.8 + Math.random() * 1.2}s ease-out forwards`;
+    } else {
+      p.style.left = '0px';
+      p.style.top = (15 + Math.random() * 60) + '%';
+      p.style.animation = `streamFromLeft ${1.8 + Math.random() * 1.2}s ease-out forwards`;
+    }
+
+    p.style.animationDelay = (Math.random() * 0.3) + 's';
+    dataStreamsEl.appendChild(p);
+
+    // Clean up old particles
+    if (dataStreamsEl.children.length > 30) {
+      dataStreamsEl.removeChild(dataStreamsEl.firstChild);
+    }
+  }, 200);
+}
+
+function stopDataStreams() {
+  if (streamInterval) { clearInterval(streamInterval); streamInterval = null; }
+  if (dataStreamsEl) {
+    dataStreamsEl.classList.remove('active');
+    setTimeout(() => { if (dataStreamsEl) dataStreamsEl.innerHTML = ''; }, 600);
+  }
+}
+
+// Before/after contrast card
+function showContrastCard() {
+  const card = document.createElement('div');
+  card.className = 'contrast-card';
+  card.innerHTML = `
+    <div class="contrast-line">Average rep: <span class="time-val">45 minutes</span> to write a cold email.</div>
+    <div class="contrast-line highlight">SalesScout: <span class="time-val">4 seconds.</span></div>
+  `;
+  msgBox.appendChild(card);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    card.classList.add('show');
+    scroll();
+  }));
+}
+
 function showPipelineTease() {
   const card = document.createElement('div');
   card.className = 'pipeline-tease';
@@ -1085,6 +1246,8 @@ async function playScene(scene) {
     const typing = showTyping();
     await sleep(t.typingMin);
     removeTyping(typing);
+    // Start data streams if scene has labels
+    if (scene.streamLabels) startDataStreams(scene.streamLabels);
   }
   const progressEls = [];
   for (const p of scene.progress) {
@@ -1092,6 +1255,8 @@ async function playScene(scene) {
     await sleep(t.progressGap);
   }
   if (progressEls.length > 0 && scene.responses.length > 0) {
+    // Stop data streams before results appear
+    if (scene.streamLabels) stopDataStreams();
     for (const el of progressEls) { el.classList.add('checked'); await sleep(t.checkmarkGap); }
     await sleep(t.checkmarkPause);
   }
@@ -1108,10 +1273,12 @@ async function playScene(scene) {
     if (r.style === 'decision') gap += t.decisionPause;
     if (r.extraPause === 'vibrantHealth') gap = t.vibrantHealthPause;
     if (r.extraPause === 'outreach') {
-      // Show pipeline tease card during outreach pause
-      await sleep(1500);
+      // Before/after contrast, then pipeline tease
+      await sleep(1200);
+      showContrastCard();
+      await sleep(2000);
       showPipelineTease();
-      await sleep(t.outreachPause - 1500);
+      await sleep(t.outreachPause - 3200);
       continue;
     }
     await sleep(gap);
@@ -1165,14 +1332,16 @@ async function playSevenAm() {
   // Remove overlay entirely
   lockOverlay.classList.remove('show');
 
-  // Overnight bubbles
+  // Overnight bubbles — with slow calm data streams
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
+  startDataStreams(['Overnight scan', '4 matches found', 'Decision windows open']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
   }
+  stopDataStreams();
 
   await sleep(t.silenceAfterBriefs);
 
@@ -1193,6 +1362,7 @@ const staticMessages = msgBox.innerHTML;
 
 function resetAll() {
   resetAudio();
+  stopDataStreams();
   msgBox.innerHTML = staticMessages;
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
