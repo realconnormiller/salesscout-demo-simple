@@ -1075,7 +1075,7 @@ function scheduleSFX() {
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
   scheduleSound('vo2', 26500);     // 24s → ends 50500
-  scheduleSound('vo4', 53500);     // 11s → ends 64500
+  scheduleSound('vo4', 52000);     // 11s → ends 63000
   scheduleSound('vo3', 67000);     // 12s → ends 79000
   scheduleSound('vo5', 80200);     // 2s  → ends 82200
 
@@ -1084,8 +1084,8 @@ function scheduleSFX() {
   scheduleCallback(25500, () => duckAmbient(0.5, 1200));       // VO1 ends — back to full
   scheduleCallback(26500, () => duckAmbient(0.15, 800));       // VO2 starts
   scheduleCallback(50500, () => duckAmbient(0.5, 1200));       // VO2 ends
-  scheduleCallback(53500, () => duckAmbient(0.15, 800));       // VO4 starts
-  scheduleCallback(64500, () => duckAmbient(0.5, 1200));       // VO4 ends
+  scheduleCallback(52000, () => duckAmbient(0.15, 800));       // VO4 starts
+  scheduleCallback(63000, () => duckAmbient(0.5, 1200));       // VO4 ends
   scheduleCallback(67000, () => duckAmbient(0.15, 800));       // VO3 starts
   scheduleCallback(79000, () => duckAmbient(0.5, 1200));       // VO3 ends
   scheduleCallback(80200, () => duckAmbient(0.15, 800));       // VO5 starts
