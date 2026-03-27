@@ -1125,60 +1125,101 @@ async function runDemo() {
 // =============================================================
 // DEBUG OVERLAY — temporary, remove after calibration
 // =============================================================
+const DEMO_TOTAL_MS = 95000; // approximate total demo length for timeline
+const SCENE_MARKERS = [
+  { ms: 0, label: 'S1' },
+  { ms: 20050, label: 'S2' },
+  { ms: 34210, label: 'S3' },
+  { ms: 42460, label: 'S4' },
+  { ms: 51310, label: '7AM' },
+  { ms: 76360, label: 'END' },
+];
 let debugStart = 0;
 let debugInterval = null;
 let debugPaused = false;
 let debugPausedAt = 0;
-const debugTimer = document.getElementById('debugTimer');
-const debugScene = document.getElementById('debugScene');
-const debugPauseBtn = document.getElementById('debugPauseBtn');
+let debugElapsed = 0;
 
-function debugSetScene(label) {
-  if (debugScene) debugScene.textContent = label;
-}
+// Create debug DOM after a tick so elements exist
+setTimeout(() => {
+  const dTimer = document.getElementById('debugTimer');
+  const dScene = document.getElementById('debugScene');
+  const dPause = document.getElementById('debugPauseBtn');
+  const dBar = document.getElementById('debugProgress');
+  const dHead = document.getElementById('debugPlayhead');
+  const dTime = document.getElementById('debugBarTime');
 
-function debugStartTimer() {
-  debugStart = performance.now();
-  debugPaused = false;
-  if (debugInterval) clearInterval(debugInterval);
-  debugInterval = setInterval(() => {
-    if (!debugPaused) {
-      const elapsed = Math.round(performance.now() - debugStart);
-      debugTimer.textContent = 'T: ' + elapsed.toLocaleString() + 'ms';
-    }
-  }, 100);
-}
+  // Add marker ticks to timeline
+  const dMarkers = document.getElementById('debugMarkers');
+  SCENE_MARKERS.forEach(m => {
+    const tick = document.createElement('div');
+    tick.style.cssText = 'position:absolute;top:0;height:100%;width:1px;background:#4db8ff;';
+    tick.style.left = ((m.ms / DEMO_TOTAL_MS) * 100) + '%';
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'position:absolute;top:-16px;font-size:10px;color:#4db8ff;transform:translateX(-50%);white-space:nowrap;';
+    lbl.style.left = ((m.ms / DEMO_TOTAL_MS) * 100) + '%';
+    lbl.textContent = m.label;
+    dMarkers.appendChild(tick);
+    dMarkers.appendChild(lbl);
+  });
 
-function debugStopTimer() {
-  if (debugInterval) { clearInterval(debugInterval); debugInterval = null; }
-  debugTimer.textContent = 'T: 0ms';
-  debugScene.textContent = 'Idle';
-}
-
-function debugTogglePause() {
-  if (!debugPaused) {
-    debugPaused = true;
-    debugPausedAt = performance.now();
-    // Pause all audio
-    Object.values(sounds).forEach(s => { try { s.pause(); } catch(e) {} });
-    debugPauseBtn.textContent = '\u25B6 Resume';
-  } else {
-    // Shift start time by paused duration
-    const pauseDuration = performance.now() - debugPausedAt;
-    debugStart += pauseDuration;
+  window._debugSetScene = label => { if (dScene) dScene.textContent = label; };
+  window._debugStartTimer = () => {
+    debugStart = performance.now();
     debugPaused = false;
-    // Resume all audio that was playing
-    Object.values(sounds).forEach(s => { try { if (s.currentTime > 0 && s.paused) s.play().catch(() => {}); } catch(e) {} });
-    debugPauseBtn.textContent = '\u23F8 Pause';
-  }
-}
+    if (debugInterval) clearInterval(debugInterval);
+    debugInterval = setInterval(() => {
+      if (!debugPaused) {
+        debugElapsed = Math.round(performance.now() - debugStart);
+        dTimer.textContent = 'T: ' + debugElapsed.toLocaleString() + 'ms';
+        // Update timeline bar
+        const pct = Math.min((debugElapsed / DEMO_TOTAL_MS) * 100, 100);
+        dBar.style.width = pct + '%';
+        dHead.style.left = pct + '%';
+        const secs = (debugElapsed / 1000).toFixed(1);
+        const total = (DEMO_TOTAL_MS / 1000).toFixed(0);
+        dTime.textContent = secs + 's / ' + total + 's';
+      }
+    }, 50);
+  };
+  window._debugStopTimer = () => {
+    if (debugInterval) { clearInterval(debugInterval); debugInterval = null; }
+    dTimer.textContent = 'T: done';
+    dScene.textContent = 'Done';
+  };
 
-if (debugPauseBtn) debugPauseBtn.addEventListener('click', debugTogglePause);
+  if (dPause) dPause.addEventListener('click', () => {
+    if (!debugPaused) {
+      debugPaused = true;
+      debugPausedAt = performance.now();
+      Object.values(sounds).forEach(s => { try { s.pause(); } catch(e) {} });
+      dPause.textContent = '\u25B6 Resume';
+    } else {
+      debugStart += performance.now() - debugPausedAt;
+      debugPaused = false;
+      Object.values(sounds).forEach(s => { try { if (s.currentTime > 0 && s.paused) s.play().catch(()=>{}); } catch(e) {} });
+      dPause.textContent = '\u23F8 Pause';
+    }
+  });
+}, 0);
+
+function debugSetScene(l) { if (window._debugSetScene) window._debugSetScene(l); }
+function debugStartTimer() { if (window._debugStartTimer) window._debugStartTimer(); }
+function debugStopTimer() { if (window._debugStopTimer) window._debugStopTimer(); }
 </script>
 
 <!-- Debug overlay elements -->
-<div id="debugTimer" style="position:fixed;top:12px;right:12px;background:rgba(0,0,0,0.8);color:#fff;font-size:14px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">T: 0ms</div>
-<div id="debugScene" style="position:fixed;bottom:12px;left:12px;background:rgba(0,0,0,0.8);color:#4db8ff;font-size:13px;font-family:monospace;padding:6px 12px;border-radius:4px;z-index:9999">Idle</div>
+<div id="debugTimer" style="position:fixed;top:12px;right:12px;background:rgba(0,0,0,0.85);color:#fff;font-size:14px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">T: 0ms</div>
+<div id="debugScene" style="position:fixed;top:12px;right:140px;background:rgba(0,0,0,0.85);color:#4db8ff;font-size:13px;font-family:monospace;padding:8px 12px;border-radius:4px;z-index:9999">Idle</div>
+<!-- Timeline bar -->
+<div style="position:fixed;bottom:0;left:0;right:0;height:40px;background:#111;z-index:9999;display:flex;align-items:center;padding:0 16px;gap:12px;">
+  <div id="debugBarTime" style="font-size:11px;font-family:monospace;color:#888;width:90px;flex-shrink:0">0.0s / 95s</div>
+  <div style="flex:1;position:relative;height:6px;background:#222;border-radius:3px;overflow:visible;">
+    <div id="debugMarkers" style="position:absolute;inset:0;"></div>
+    <div id="debugProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#1a6fff,#4db8ff);border-radius:3px;position:relative;z-index:1;transition:width 50ms linear;"></div>
+    <div id="debugPlayhead" style="position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:12px;height:12px;background:#fff;border-radius:50%;z-index:2;box-shadow:0 0 6px rgba(26,111,255,0.5);transition:left 50ms linear;"></div>
+  </div>
+</div>
 
 </body>
 </html>
