@@ -386,29 +386,77 @@ body {
 }
 .cl-sub.reveal, .cl-logo.reveal, .cl-cta.reveal, .cl-replay.reveal { opacity: 1; }
 
-/* 5. Intro animation */
+/* 5. Intro overlay — simple landing */
 .intro-overlay {
   position: fixed; inset: 0; z-index: 200;
   background: #000;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 0;
+  gap: 8px;
   opacity: 1; transition: opacity 600ms ease;
   pointer-events: none;
 }
 .intro-overlay.hidden { opacity: 0; pointer-events: none; }
 .intro-text {
-  font-size: 42px; font-weight: 600; letter-spacing: -0.5px;
-  color: #fff; opacity: 0; transform: translateY(12px);
-  transition: opacity 600ms ease, transform 600ms ease;
+  font-size: 42px; font-weight: 600; letter-spacing: -0.5px; color: #fff;
 }
-.intro-text.show { opacity: 1; transform: translateY(0); }
 .intro-text .blue { color: #4db8ff; }
 .intro-sub {
-  font-size: 16px; color: #666; margin-top: 8px;
-  opacity: 0; transition: opacity 600ms ease 200ms;
+  font-size: 16px; color: #666;
 }
-.intro-sub.show { opacity: 1; }
+
+/* "This is SalesScout" in-demo moment */
+.brand-moment {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+}
+.brand-moment { transition: opacity 500ms ease; }
+.brand-moment.show { opacity: 1; }
+.brand-moment .bm-this {
+  font-size: 18px; font-weight: 400; letter-spacing: 3px;
+  text-transform: uppercase; color: #555;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+.brand-moment .bm-this.show { opacity: 1; transform: translateY(0); }
+.brand-moment .bm-name {
+  font-size: 52px; font-weight: 600; letter-spacing: -1px;
+  margin-top: 2px;
+  opacity: 0; transform: scale(0.9);
+  filter: blur(10px);
+  transition: opacity 500ms ease 200ms, transform 500ms ease 200ms, filter 500ms ease 200ms;
+}
+.brand-moment .bm-name.show {
+  opacity: 1; transform: scale(1); filter: blur(0);
+}
+.brand-moment .bm-name .bm-scout {
+  color: #4db8ff;
+  text-shadow: 0 0 40px rgba(26,111,255,0.5), 0 0 80px rgba(26,111,255,0.2);
+}
+.brand-moment .bm-line {
+  width: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #4db8ff, transparent);
+  margin: 14px auto 0;
+  transition: width 500ms ease 500ms;
+}
+.brand-moment .bm-line.show { width: 180px; }
+.brand-moment .bm-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.3);
+  width: 400px; height: 400px;
+  background: radial-gradient(ellipse, rgba(26,111,255,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 600ms ease, transform 600ms ease;
+  z-index: -1;
+}
+.brand-moment .bm-glow.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
 /* =============================================================
    RIGHT PANEL
@@ -710,8 +758,14 @@ body {
 </head>
 <body>
 <div class="intro-overlay" id="introOverlay">
-  <div class="intro-text show" id="introText">This is <span class="blue">SalesScout</span></div>
-  <div class="intro-sub show" id="introSub">Watch what happens next.</div>
+  <div class="intro-text">Sales<span class="blue">Scout</span></div>
+  <div class="intro-sub">Watch what happens next.</div>
+</div>
+<div class="brand-moment" id="brandMoment">
+  <div class="bm-glow"></div>
+  <div class="bm-this">This is</div>
+  <div class="bm-name">Sales<span class="bm-scout">Scout</span></div>
+  <div class="bm-line"></div>
 </div>
 <canvas id="dataCanvas" width="1920" height="1080"></canvas>
 <div id="badgeContainer"></div>
@@ -1072,6 +1126,9 @@ function scheduleSFX() {
   // Ambient — ensure it's playing (may have started on page load)
   sounds.ambient.play().catch(() => {});
 
+  // "This is SalesScout" brand moment — synced to VO1
+  scheduleCallback(3800, () => playBrandMoment());
+
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
   scheduleSound('vo2', 26500);     // 24s → ends 50500
@@ -1359,6 +1416,35 @@ function stopDataStreams() {
     badgeContainer.innerHTML = '';
     particles = [];
   }, 600);
+}
+
+// "This is SalesScout" brand moment — triggered during VO1
+async function playBrandMoment() {
+  const el = document.getElementById('brandMoment');
+  if (!el) return;
+  el.classList.add('show');
+  const glow = el.querySelector('.bm-glow');
+  const thisEl = el.querySelector('.bm-this');
+  const nameEl = el.querySelector('.bm-name');
+  const line = el.querySelector('.bm-line');
+  // Staggered reveal
+  glow.classList.add('show');
+  await sleep(100);
+  thisEl.classList.add('show');
+  await sleep(300);
+  nameEl.classList.add('show');
+  await sleep(400);
+  line.classList.add('show');
+  // Hold
+  await sleep(1500);
+  // Fade out
+  el.classList.remove('show');
+  await sleep(500);
+  // Reset
+  glow.classList.remove('show');
+  thisEl.classList.remove('show');
+  nameEl.classList.remove('show');
+  line.classList.remove('show');
 }
 
 // Cursor blink control
