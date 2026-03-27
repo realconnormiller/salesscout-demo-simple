@@ -412,7 +412,7 @@ body {
   pointer-events: none;
   z-index: 0;
   opacity: 0;
-  transition: opacity 800ms ease;
+  transition: opacity 1200ms ease;
 }
 #dataCanvas.active { opacity: 1; }
 
@@ -431,7 +431,7 @@ body {
   z-index: 0;
   opacity: 0;
   transform: scale(0.9);
-  transition: opacity 500ms ease, transform 500ms ease;
+  transition: opacity 800ms ease, transform 800ms ease;
   white-space: nowrap;
   box-shadow: 0 0 20px rgba(26, 111, 255, 0.1);
 }
@@ -757,7 +757,7 @@ const CONFIG = {
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
       readReceipt: true,
-      streamLabels: ['Tavily', 'FMCSA', 'Indeed', 'Press releases', 'Hiring signals', 'Trigger events'],
+      streamLabels: ['200+ data points', 'Fleet & authority records', 'Recall & compliance signals', 'Hiring velocity tracking', 'Carrier disruption mapping', 'Nobody\u2019s called them yet'],
       progress: [
         'Researching Southeast shippers\u2026',
         'Scanning recent facility announcements and trigger events\u2026',
@@ -783,7 +783,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
-      streamLabels: ['Market signals', 'Facility records', 'Decision windows'],
+      streamLabels: ['Pattern matching', 'Expansion signals', 'Open decision windows'],
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -1368,8 +1368,8 @@ async function playScene(scene) {
     await sleep(t.progressGap);
   }
   if (progressEls.length > 0 && scene.responses.length > 0) {
-    // Stop data streams before results appear
-    if (scene.streamLabels) stopDataStreams();
+    // Let data streams linger — fade after a delay
+    if (scene.streamLabels) setTimeout(() => stopDataStreams(), 4000);
     for (const el of progressEls) { el.classList.add('checked'); await sleep(t.checkmarkGap); }
     await sleep(t.checkmarkPause);
   }
@@ -1449,7 +1449,7 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  startDataStreams(['Overnight scan', '4 matches found', 'Decision windows open']);
+  startDataStreams(['Ran while you slept', '4 open windows found', 'First-mover advantage']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
