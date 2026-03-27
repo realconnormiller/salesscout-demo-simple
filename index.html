@@ -405,11 +405,11 @@ body {
   font-size: 16px; color: #666;
 }
 
-/* "This is SalesScout" in-demo moment */
+/* "This is SalesScout" in-demo moment — positioned right of phone */
 .brand-moment {
   position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
+  top: 50%; right: 80px;
+  transform: translateY(-50%);
   z-index: 50;
   text-align: center;
   pointer-events: none;
@@ -553,7 +553,7 @@ body {
   top: 0; left: 0;
   width: 100vw; height: 100vh;
   pointer-events: none;
-  z-index: 0;
+  z-index: 3;
   opacity: 0;
   transition: opacity 1200ms ease;
 }
@@ -571,7 +571,7 @@ body {
   font-family: 'Inter', sans-serif;
   color: rgba(77, 184, 255, 0.8);
   pointer-events: none;
-  z-index: 5;
+  z-index: 10;
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 800ms ease, transform 800ms ease;
@@ -768,7 +768,7 @@ body {
   <div class="bm-line"></div>
 </div>
 <canvas id="dataCanvas" width="1920" height="1080"></canvas>
-<div id="badgeContainer" style="position:fixed;inset:0;pointer-events:none;z-index:5;"></div>
+<div id="badgeContainer" style="position:fixed;inset:0;pointer-events:none;z-index:10;"></div>
 
 <div class="layout">
   <!-- LEFT COLUMN — Phone -->
@@ -1126,8 +1126,8 @@ function scheduleSFX() {
   // Ambient — ensure it's playing (may have started on page load)
   sounds.ambient.play().catch(() => {});
 
-  // "This is SalesScout" brand moment — synced to VO1
-  scheduleCallback(3800, () => playBrandMoment());
+  // "This is SalesScout" brand moment
+  scheduleCallback(22000, () => playBrandMoment());
 
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
@@ -1370,12 +1370,12 @@ function animateParticles() {
 
 // Source badge positions around phone
 const BADGE_POSITIONS = [
-  { x: -220, y: -200 }, // top-left
-  { x: 220, y: -150 },  // top-right
-  { x: -250, y: 0 },    // mid-left
-  { x: 250, y: 50 },    // mid-right
-  { x: -200, y: 180 },  // bottom-left
-  { x: 230, y: 200 },   // bottom-right
+  { x: -300, y: -220 }, // top-left
+  { x: 300, y: -180 },  // top-right
+  { x: -330, y: 10 },   // mid-left
+  { x: 330, y: 40 },    // mid-right
+  { x: -280, y: 200 },  // bottom-left
+  { x: 300, y: 220 },   // bottom-right
 ];
 
 function startDataStreams(labels) {
