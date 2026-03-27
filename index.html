@@ -845,47 +845,46 @@ function scheduleSFX() {
   // Ambient
   sounds.ambient.play().catch(() => {});
 
-  // Ambient ducking — synced to VO timeline
-  scheduleCallback(3500, () => duckAmbient(0.02, 800));        // VO1 starts (3500)
-  scheduleCallback(25500, () => duckAmbient(0.06, 1200));      // VO1 ends (3500+22s)
-  scheduleCallback(26500, () => duckAmbient(0.02, 800));       // VO2 starts (26500)
-  scheduleCallback(50500, () => duckAmbient(0.06, 1200));      // VO2 ends (26500+24s)
-  scheduleCallback(45500, () => duckAmbient(0.02, 800));       // VO3 starts (45500)
-  scheduleCallback(60500, () => duckAmbient(0.06, 1200));      // VO3 ends (45500+15s)
-  scheduleCallback(61500, () => duckAmbient(0.02, 800));       // VO4 starts (61500)
-  scheduleCallback(69500, () => duckAmbient(0.08, 1200));      // VO4 ends (61500+8s)
-  scheduleCallback(77200, () => duckAmbient(0.02, 800));       // VO5 starts (77200)
-  scheduleCallback(79200, () => duckAmbient(0.06, 1200));      // VO5 ends, ambient back up
-  scheduleCallback(88000, () => duckAmbient(0, 3000));         // fade out at end of closing card
-
   // VO clips
   scheduleSound('vo1', 3500);      // 22s → ends 25500
   scheduleSound('vo2', 26500);     // 24s → ends 50500
-  scheduleSound('vo3', 45500);     // 15s → ends 60500 (-6000)
-  scheduleSound('vo4', 61500);     // 8s  → ends 69500 (-6000)
-  scheduleSound('vo5', 77200);     // 2s → fires ~78500 with closing card ~79k
+  scheduleSound('vo3', 45500);     // 15s → ends 60500
+  scheduleSound('vo4', 61500);     // 8s  → ends 69500
+  scheduleSound('vo5', 77200);     // 2s  → fires ~78500
 
-  // Scene 1
+  // Ambient ducking — synced to VO
+  scheduleCallback(3500, () => duckAmbient(0.02, 800));        // VO1 starts
+  scheduleCallback(25500, () => duckAmbient(0.06, 1200));      // VO1 ends
+  scheduleCallback(26500, () => duckAmbient(0.02, 800));       // VO2 starts
+  scheduleCallback(45500, () => duckAmbient(0.02, 800));       // VO3 starts (stays ducked)
+  scheduleCallback(60500, () => duckAmbient(0.06, 1200));      // VO3 ends
+  scheduleCallback(61500, () => duckAmbient(0.02, 800));       // VO4 starts
+  scheduleCallback(69500, () => duckAmbient(0.08, 1200));      // VO4 ends
+  scheduleCallback(77200, () => duckAmbient(0.02, 800));       // VO5 starts
+  scheduleCallback(79200, () => duckAmbient(0.06, 1200));      // VO5 ends, ambient back up
+  scheduleCallback(88000, () => duckAmbient(0, 3000));         // fade out at end of closing card
+
+  // Scene 1 SFX
   scheduleSound('typing', 0);
   scheduleSound('send', 1600);
   scheduleSound('pursue', 10800);
   scheduleSound('pursue2', 15200);
 
-  // Scene 2
+  // Scene 2 SFX
   scheduleSound('send', 21010);
 
-  // Scene 3
-  scheduleSound('send', 36000);    // -6000
+  // Scene 3 SFX
+  scheduleSound('send', 29000);
 
-  // Scene 4
-  scheduleSound('send', 37510);    // -6000
+  // Scene 4 SFX
+  scheduleSound('send', 37500);
 
-  // 7AM sequence
-  scheduleSound('lock', 52700);    // -6000
-  scheduleSound('chime', 54700);   // -6000
-  scheduleSound('unlock', 59700);  // -6000
+  // 7AM sequence SFX
+  scheduleSound('lock', 45000);
+  scheduleSound('chime', 47200);
+  scheduleSound('unlock', 52200);
 
-  // Closing
+  // Closing SFX
   scheduleSound('lock', 77200, 0.2);
 
   // Fire all scheduled events
