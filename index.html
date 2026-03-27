@@ -604,22 +604,22 @@ const CONFIG = {
     userTypingCap:        600,
     progressGap:          800,
     bubbleGap:           1200,
-    sceneGap:            1800,
+    sceneGap:            2800,
     userPause:            400,
     readReceiptDelay:     800,
     checkmarkGap:         200,
     checkmarkPause:       400,
     decisionPause:       1200,
-    outreachPause:       8000,
+    outreachPause:      12000,
     vibrantHealthPause:  3000,
     pipelineBubbleGap:   1500,
     longBubbleExtra:      800,
     notificationHold:    4000,
     sevenAmBubbleGap:    1800,
-    silenceAfterBriefs:  2000,
+    silenceAfterBriefs:  5000,
     preSevenAmPause:      500,
     phoneFadeOut:         800,
-    closingHold:         4000,
+    closingHold:        11000,
   },
 
   fomoStats: [
@@ -700,6 +700,172 @@ const CONFIG = {
     cta: 'Get Early Access',
   },
 };
+
+// =============================================================
+// AUDIO SYSTEM — loads on first Start Demo click, fails silently
+// =============================================================
+class AudioManager {
+  constructor() {
+    this.ctx = null;
+    this.buffers = {};
+    this.muted = false;
+    this.ambient = null;
+    this.ambientGain = null;
+    this.scheduledIds = [];
+    this.files = {
+      'vo1': 'audio/vo-clip1.wav',
+      'vo2': 'audio/vo-clip2.wav',
+      'vo3': 'audio/vo-clip3.wav',
+      'send': 'audio/send.wav',
+      'typing': 'audio/typing.wav',
+      'unlock': 'audio/unlock.wav',
+      'pop': 'audio/pop.wav',
+      'pursue': 'audio/pursue.wav',
+      'chime': 'audio/chime.wav',
+      'ambient': 'audio/ambient.mp3',
+    };
+  }
+
+  async init() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // Load all files in parallel, fail silently per file
+      await Promise.all(Object.entries(this.files).map(async ([key, url]) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const buf = await res.arrayBuffer();
+          this.buffers[key] = await this.ctx.decodeAudioData(buf);
+        } catch(e) { /* silent */ }
+      }));
+    } catch(e) { this.ctx = null; }
+  }
+
+  play(key, volume = 1.0) {
+    if (!this.ctx || !this.buffers[key] || this.muted) return null;
+    try {
+      const src = this.ctx.createBufferSource();
+      const gain = this.ctx.createGain();
+      src.buffer = this.buffers[key];
+      gain.gain.value = volume;
+      src.connect(gain).connect(this.ctx.destination);
+      src.start();
+      return { src, gain };
+    } catch(e) { return null; }
+  }
+
+  // Schedule a sound at a future time (ms from now)
+  schedule(key, delayMs, volume = 1.0) {
+    const id = setTimeout(() => this.play(key, volume), delayMs);
+    this.scheduledIds.push(id);
+    return id;
+  }
+
+  startAmbient() {
+    if (!this.ctx || !this.buffers.ambient || this.muted) return;
+    try {
+      const src = this.ctx.createBufferSource();
+      this.ambientGain = this.ctx.createGain();
+      src.buffer = this.buffers.ambient;
+      src.loop = true;
+      this.ambientGain.gain.value = 0.06;
+      src.connect(this.ambientGain).connect(this.ctx.destination);
+      src.start();
+      this.ambient = src;
+    } catch(e) {}
+  }
+
+  setAmbientVolume(vol, rampMs = 500) {
+    if (!this.ambientGain || !this.ctx) return;
+    try {
+      this.ambientGain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + rampMs / 1000);
+    } catch(e) {}
+  }
+
+  stopAmbient() {
+    try { if (this.ambient) { this.ambient.stop(); this.ambient = null; } } catch(e) {}
+  }
+
+  cancelAll() {
+    this.scheduledIds.forEach(id => clearTimeout(id));
+    this.scheduledIds = [];
+    this.stopAmbient();
+  }
+
+  toggleMute() { this.muted = !this.muted; return this.muted; }
+}
+
+const audio = new AudioManager();
+
+// SFX timeline — all times in ms from demo start (after initial 800ms pause)
+function scheduleSFX() {
+  const a = audio;
+  // Ambient music
+  a.startAmbient();
+  // Ambient volume ramps
+  a.schedule('_vol', 30000, 0); setTimeout(() => a.setAmbientVolume(0.08, 2000), 30000);
+  a.schedule('_vol', 51000, 0); setTimeout(() => a.setAmbientVolume(0.12, 2000), 51000);
+  a.schedule('_vol', 60000, 0); setTimeout(() => a.setAmbientVolume(0.15, 2000), 60000);
+  a.schedule('_vol', 73000, 0); setTimeout(() => a.setAmbientVolume(0.08, 2000), 73000);
+  a.schedule('_vol', 76000, 0); setTimeout(() => a.setAmbientVolume(0.0, 3000), 76000);
+
+  // VO clips
+  a.schedule('vo1', 0, 1.0);
+  a.schedule('vo2', 40000, 1.0);
+  a.schedule('vo3', 83000, 1.0);
+
+  // Scene 1
+  a.schedule('typing', 1200, 0.2);
+  a.schedule('send', 1850, 0.4);
+  a.schedule('pop', 3850, 0.2);
+  a.schedule('pop', 4650, 0.15);
+  a.schedule('pop', 5450, 0.15);
+  a.schedule('pop', 6250, 0.15);
+  a.schedule('pop', 7250, 0.2);
+  a.schedule('pop', 8450, 0.25);
+  a.schedule('pursue', 11450, 0.6);
+  a.schedule('pop', 13850, 0.25);
+  a.schedule('pursue', 15850, 0.6);
+
+  // Scene 2
+  a.schedule('typing', 20450, 0.2);
+  a.schedule('send', 21010, 0.4);
+  a.schedule('pop', 23810, 0.15);
+  a.schedule('pop', 24410, 0.25);
+
+  // Scene 3
+  a.schedule('typing', 34610, 0.2);
+  a.schedule('send', 35260, 0.4);
+  a.schedule('pop', 37260, 0.15);
+  a.schedule('pop', 37860, 0.2);
+  a.schedule('pop', 38660, 0.2);
+  a.schedule('pop', 39460, 0.2);
+  a.schedule('pop', 40260, 0.2);
+
+  // Scene 4
+  a.schedule('typing', 42860, 0.2);
+  a.schedule('send', 43510, 0.4);
+  a.schedule('pop', 45510, 0.2);
+  a.schedule('pop', 47010, 0.2);
+  a.schedule('pop', 49310, 0.2);
+
+  // 7AM sequence
+  a.schedule('unlock', 52110, 0.3);
+  a.schedule('chime', 54210, 0.5);
+  a.schedule('pop', 55710, 0.3);
+  a.schedule('pop', 58960, 0.25);
+
+  // Overnight bubbles
+  a.schedule('pop', 60860, 0.3);
+  a.schedule('pop', 62060, 0.2);
+  a.schedule('pop', 63260, 0.2);
+  a.schedule('pop', 64460, 0.25);
+  a.schedule('pop', 66260, 0.25);
+  a.schedule('pop', 68060, 0.25);
+  a.schedule('pop', 69860, 0.25);
+  a.schedule('pop', 71660, 0.2);
+}
 
 // =============================================================
 // ENGINE
@@ -940,6 +1106,7 @@ async function playClosing() {
 const staticMessages = msgBox.innerHTML;
 
 function resetAll() {
+  audio.cancelAll();
   msgBox.innerHTML = staticMessages;
   closingOv.classList.remove('show');
   phoneWrap.classList.remove('fade-out');
@@ -958,9 +1125,16 @@ async function runDemo() {
   running = true;
   startBtn.disabled = true;
 
+  // Initialize audio on first click (browser autoplay policy)
+  await audio.init();
+  audio.cancelAll();
+
   resetAll();
   msgBox.scrollTop = msgBox.scrollHeight;
   await sleep(800);
+
+  // Start audio timeline from this point
+  scheduleSFX();
 
   for (let i = 0; i < CONFIG.scenes.length; i++) {
     await playScene(CONFIG.scenes[i]);
