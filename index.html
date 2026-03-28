@@ -1443,10 +1443,13 @@ async function revealClosingCard() {
   playSound('woosh');
   line2.classList.add('reveal');
   await sleep(600);
+  playSound('pursue');
   sub.classList.add('reveal');
   await sleep(400);
+  playSound('pop');
   logo.classList.add('reveal');
   await sleep(300);
+  playSound('pop');
   cta.classList.add('reveal');
   await sleep(200);
   if (replay) replay.classList.add('reveal');
