@@ -23,7 +23,7 @@
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; }
+html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; }
 body {
   background: var(--color-bg);
   font-family: 'Inter', -apple-system, sans-serif;
@@ -1329,13 +1329,17 @@ function startDataStreams(labels) {
   badgeTimers = [];
   if (badgeContainer) badgeContainer.innerHTML = '';
   const pm = getPhoneMetrics();
+  const colRect = colLeft.getBoundingClientRect();
   labels.forEach((label, i) => {
     const pos = BADGE_LAYOUT[i % BADGE_LAYOUT.length];
     const badge = document.createElement('div');
     badge.className = 'source-badge';
     badge.innerHTML = `<span class="badge-dot"></span>${label}`;
     badge.style.left = (pm.cx + pos.x) + 'px';
-    badge.style.top = (pm.cy + pos.y) + 'px';
+    // Clamp Y to stay within col-left bounds (20px padding)
+    const rawY = pm.cy + pos.y;
+    const clampedY = Math.max(30, Math.min(rawY, colRect.height - 30));
+    badge.style.top = clampedY + 'px';
     badge.style.transform = 'translate(-50%, -50%)' + (pos.from === 'left' ? ' translateX(-40px)' : ' translateX(40px)');
     badgeContainer.appendChild(badge);
     const t = setTimeout(() => {
