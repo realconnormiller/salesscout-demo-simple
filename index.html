@@ -1153,7 +1153,7 @@ function scheduleSFX() {
   sounds.ambient.play().catch(() => {});
 
   // Animations — sounds fired inline by the functions themselves
-  scheduleCallback(17600, () => playKnowMoment());
+  scheduleCallback(17400, () => playKnowMoment());
   scheduleCallback(20500, () => playBrandMoment());
 
   // VO clips
@@ -1361,7 +1361,7 @@ async function playKnowMoment() {
 async function playBrandMoment() {
   const el = document.getElementById('brandMoment');
   if (!el) return;
-  playSound('reveal');
+  playSound('woosh');
   el.classList.add('show');
   const glow = el.querySelector('.bm-glow');
   const thisEl = el.querySelector('.bm-this');
@@ -1437,8 +1437,10 @@ async function revealClosingCard() {
   await sleep(400);
   // Play vo5 in sync with "Stop prospecting" reveal
   playSound('vo5');
+  playSound('woosh');
   line1.classList.add('reveal');
-  await sleep(1000);
+  await sleep(1400);
+  playSound('woosh');
   line2.classList.add('reveal');
   await sleep(600);
   sub.classList.add('reveal');
