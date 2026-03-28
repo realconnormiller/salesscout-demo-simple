@@ -928,7 +928,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
-      streamLabels: ['Pattern matching', 'Expansion signals', 'Open decision windows'],
+      streamLabels: ['Pattern matching', 'Expansion signals', 'Open decision windows', 'Greenfield facilities', 'Permit filings', 'Hiring velocity', 'Carrier gaps', 'First-mover targets'],
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -1599,7 +1599,7 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  startDataStreams(['Ran while you slept', '4 open windows found', 'First-mover advantage']);
+  startDataStreams(['Ran while you slept', '4 open windows found', 'First-mover advantage', 'Overnight research', 'Decision urgency scored', 'No broker has called', 'ICP match confirmed', 'Ready to pursue']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
