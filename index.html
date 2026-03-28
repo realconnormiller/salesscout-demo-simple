@@ -1262,7 +1262,10 @@ function getPhoneCenter() {
 }
 
 function startDataStreams(labels) {
-  stopDataStreams();
+  // Clear immediately, not with delay
+  badgeTimers.forEach(t => clearTimeout(t));
+  badgeTimers = [];
+  if (badgeContainer) badgeContainer.innerHTML = '';
   const pc = getPhoneCenter();
   labels.forEach((label, i) => {
     const pos = BADGE_POSITIONS[i % BADGE_POSITIONS.length];
