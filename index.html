@@ -68,7 +68,7 @@ body {
 .phone-wrap {
   position: relative;
   z-index: 1;
-  transform: scale(0.78);
+  transform: scale(0.68);
   transform-origin: center center;
   transition: opacity 800ms ease;
 }
@@ -408,16 +408,17 @@ body {
   font-size: 16px; color: #666;
 }
 
-/* "This is SalesScout" in-demo moment — left side of col-left, vertically centered */
+/* "This is SalesScout" in-demo moment — left black area */
 .brand-moment {
   position: absolute;
   top: 50%;
-  left: 60px;
+  left: 5%;
   transform: translateY(-50%);
   z-index: 5;
   text-align: left;
   pointer-events: none;
   opacity: 0;
+  max-width: 250px;
 }
 .brand-moment { transition: opacity 500ms ease; }
 .brand-moment.show { opacity: 1; }
