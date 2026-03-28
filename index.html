@@ -962,7 +962,7 @@ const CONFIG = {
       readReceipt: false,
       responseGap: 800,
       streamLabels: ['Pattern matching', 'Expansion signals', 'Scoring prospects', 'Greenfield sites', 'Permit filings', 'Leadership changes', 'Supply chain pressure', 'Open decision windows'],
-      streamDuration: 10500,
+      streamDuration: 10000,
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -1156,7 +1156,7 @@ function scheduleSFX() {
   // "We just know things you don't" → then "This is SalesScout"
   scheduleSound('woosh', 17500);
   scheduleCallback(17600, () => playKnowMoment());
-  scheduleSound('reveal', 20400);
+  scheduleSound('reveal', 20100);
   scheduleCallback(20500, () => playBrandMoment());
 
   // VO clips
@@ -1331,10 +1331,18 @@ function startDataStreams(labels) {
 function stopDataStreams() {
   badgeTimers.forEach(t => clearTimeout(t));
   badgeTimers = [];
-  if (badgeContainer) {
-    badgeContainer.querySelectorAll('.source-badge').forEach(b => b.classList.remove('show'));
-    setTimeout(() => { if (badgeContainer) badgeContainer.innerHTML = ''; }, 800);
-  }
+  if (!badgeContainer) return;
+  // Cascade drop — top to bottom, 150ms apart
+  const badges = Array.from(badgeContainer.querySelectorAll('.source-badge'));
+  badges.forEach((b, i) => {
+    setTimeout(() => {
+      b.style.transition = 'opacity 400ms ease, transform 400ms ease';
+      b.style.transform = b.style.transform.replace('translate(-50%, -50%)', 'translate(-50%, 0%) translateY(30px)');
+      b.style.opacity = '0';
+    }, i * 150);
+  });
+  // Clean up after all have fallen
+  setTimeout(() => { if (badgeContainer) badgeContainer.innerHTML = ''; }, badges.length * 150 + 500);
 }
 
 // "This is SalesScout" brand moment — triggered during VO1
