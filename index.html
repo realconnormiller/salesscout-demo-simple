@@ -962,7 +962,7 @@ const CONFIG = {
       readReceipt: false,
       responseGap: 800,
       streamLabels: ['Pattern matching', 'Expansion signals', 'Scoring prospects', 'Greenfield sites', 'Permit filings', 'Leadership changes', 'Supply chain pressure', 'Open decision windows'],
-      streamDuration: 11000,
+      streamDuration: 10500,
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -1013,6 +1013,7 @@ const CONFIG = {
 const sounds = {
   send:    new Audio('audio/send.mp3'),
   woosh:   new Audio('audio/woosh.mp3'),
+  reveal:  new Audio('audio/reveal.mp3'),
   typing:  new Audio('audio/typing.mp3'),
   lock:    new Audio('audio/phone lock.mp3'),
   unlock:  new Audio('audio/phone unlock.mp3'),
@@ -1029,7 +1030,8 @@ const sounds = {
 // Volumes
 sounds.send.volume = 0.3;
 sounds.typing.volume = 0.2;
-sounds.woosh.volume = 0.5;
+sounds.woosh.volume = 0.8;
+sounds.reveal.volume = 0.7;
 sounds.lock.volume = 0.5;
 sounds.unlock.volume = 0.5;
 sounds.pursue.volume = 0.4;
@@ -1154,6 +1156,7 @@ function scheduleSFX() {
   // "We just know things you don't" → then "This is SalesScout"
   scheduleSound('woosh', 17500);
   scheduleCallback(17600, () => playKnowMoment());
+  scheduleSound('reveal', 20400);
   scheduleCallback(20500, () => playBrandMoment());
 
   // VO clips
