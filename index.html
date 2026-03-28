@@ -1151,8 +1151,8 @@ function scheduleSFX() {
 
   // "This is SalesScout" brand moment
   // "We just know things you don't" → then "This is SalesScout"
-  scheduleSound('woosh', 17900);
-  scheduleCallback(18000, () => playKnowMoment());
+  scheduleSound('woosh', 16900);
+  scheduleCallback(17000, () => playKnowMoment());
   scheduleCallback(20500, () => playBrandMoment());
 
   // VO clips
@@ -1160,7 +1160,7 @@ function scheduleSFX() {
   scheduleSound('vo2', 26500);     // 24s → ends 50500
   scheduleSound('vo4', 52000);     // 11s → ends 63000
   scheduleSound('vo3', 67000);     // 12s → ends 79000
-  scheduleSound('vo5', 80700);     // 2s  → ends 82700
+  // vo5 triggered inline by revealClosingCard() for perfect sync
 
   // Ambient ducking
   scheduleCallback(3500, () => duckAmbient(0.15, 800));        // VO starts — duck to 30%
@@ -1424,6 +1424,8 @@ async function revealClosingCard() {
   const replay = closingOv.querySelector('.cl-replay');
   closingOv.classList.add('show');
   await sleep(400);
+  // Play vo5 in sync with "Stop prospecting" reveal
+  playSound('vo5');
   line1.classList.add('reveal');
   await sleep(1100);
   line2.classList.add('reveal');
