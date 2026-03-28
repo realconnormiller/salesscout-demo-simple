@@ -35,9 +35,8 @@ body {
    ============================================================= */
 .layout {
   display: flex;
-  width: 1920px;
-  height: 1080px;
-  transform-origin: top left;
+  width: 100vw;
+  height: 100vh;
 }
 
 /* Left column — phone */
@@ -69,10 +68,8 @@ body {
 .phone-wrap {
   position: relative;
   z-index: 1;
-  transform: scale(0.82);
   transform-origin: center center;
   transition: opacity 800ms ease;
-  margin: -76px 0;
 }
 .phone-wrap.fade-out { opacity: 0; }
 
@@ -1232,21 +1229,19 @@ let running = false;
 startBtn.addEventListener('click', () => runDemo());
 $('#watchAgain').addEventListener('click', () => { running = false; runDemo(); });
 
-// Scale entire layout to fit viewport — like a presentation slide
-function scaleLayout() {
-  const layout = document.querySelector('.layout');
-  if (!layout) return;
-  const scaleX = window.innerWidth / 1920;
-  const scaleY = window.innerHeight / 1080;
-  const scale = Math.min(scaleX, scaleY);
-  layout.style.transform = `scale(${scale})`;
-  // Center if there's leftover space
-  const offsetX = (window.innerWidth - 1920 * scale) / 2;
-  const offsetY = (window.innerHeight - 1080 * scale) / 2;
-  layout.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+// Scale phone to fit viewport height
+function scalePhone() {
+  const pw = document.getElementById('phoneWrap');
+  if (!pw) return;
+  const vh = window.innerHeight;
+  const phoneH = 844;
+  const scale = Math.min((vh - 40) / phoneH, 0.85);
+  pw.style.transform = `scale(${scale})`;
+  const deadSpace = phoneH * (1 - scale);
+  pw.style.margin = `-${deadSpace / 2}px 0`;
 }
-scaleLayout();
-window.addEventListener('resize', scaleLayout);
+scalePhone();
+window.addEventListener('resize', scalePhone);
 
 // Auto-scroll to bottom on page load
 requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
