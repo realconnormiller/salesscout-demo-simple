@@ -1318,23 +1318,38 @@ function startDataStreams(labels) {
   badgeTimers = [];
   if (badgeContainer) badgeContainer.innerHTML = '';
   const pm = getPhoneMetrics();
-  // Gap between phone edge and badge — scales with available space
-  const gapX = Math.min((pm.colW / 2 - pm.w / 2) * 0.6, 280);
+  // Available gap between phone edge and col-left edge
+  const availableLeft = pm.cx - pm.w / 2;
+  const availableRight = pm.colW - (pm.cx + pm.w / 2);
+  // Skip badges if not enough room (< 120px on either side)
+  if (availableLeft < 120 && availableRight < 120) return;
   labels.forEach((label, i) => {
     const layout = BADGE_LAYOUT[i % BADGE_LAYOUT.length];
     const badge = document.createElement('div');
     badge.className = 'source-badge';
     badge.innerHTML = `<span class="badge-dot"></span>${label}`;
-    // Position: left or right of phone, y offset proportional to phone height
-    const xOffset = layout.side === 'left' ? -pm.w / 2 - gapX : pm.w / 2 + gapX;
-    badge.style.left = (pm.cx + xOffset) + 'px';
+    // Position badge edge 20px from phone edge, anchor away from phone
+    let x;
+    if (layout.side === 'left') {
+      x = pm.cx - pm.w / 2 - 20;
+      badge.style.left = x + 'px';
+      badge.style.textAlign = 'right';
+      badge.style.transform = 'translateX(-100%) translateY(-50%) translateX(-30px)';
+    } else {
+      x = pm.cx + pm.w / 2 + 20;
+      badge.style.left = x + 'px';
+      badge.style.textAlign = 'left';
+      badge.style.transform = 'translateY(-50%) translateX(30px)';
+    }
     badge.style.top = (pm.cy + layout.yPct * pm.h) + 'px';
-    const slideDir = layout.side === 'left' ? ' translateX(-40px)' : ' translateX(40px)';
-    badge.style.transform = 'translate(-50%, -50%)' + slideDir;
     badgeContainer.appendChild(badge);
     const t = setTimeout(() => {
       badge.classList.add('show');
-      badge.style.transform = 'translate(-50%, -50%)';
+      if (layout.side === 'left') {
+        badge.style.transform = 'translateX(-100%) translateY(-50%)';
+      } else {
+        badge.style.transform = 'translateY(-50%)';
+      }
     }, 500 + i * 600);
     badgeTimers.push(t);
   });
@@ -1349,8 +1364,8 @@ function stopDataStreams() {
   badges.forEach((b, i) => {
     setTimeout(() => {
       b.style.transition = 'opacity 400ms ease, transform 400ms ease';
-      b.style.transform = b.style.transform.replace('translate(-50%, -50%)', 'translate(-50%, 0%) translateY(30px)');
       b.style.opacity = '0';
+      b.style.transform += ' translateY(30px)';
     }, i * 150);
   });
   // Clean up after all have fallen
