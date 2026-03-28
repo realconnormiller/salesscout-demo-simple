@@ -46,7 +46,7 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* Right column — branding + controls */
@@ -1285,46 +1285,51 @@ const badgeContainer = document.getElementById('badgeContainer');
 const colLeft = document.querySelector('.col-left');
 let badgeTimers = [];
 
-// Badge positions — offsets from phone center
-const BADGE_POSITIONS = [
-  { x: -280, y: -240, from: 'left' },
-  { x: 280, y: -200, from: 'right' },
-  { x: -310, y: -80, from: 'left' },
-  { x: 310, y: -30, from: 'right' },
-  { x: -290, y: 80, from: 'left' },
-  { x: 290, y: 140, from: 'right' },
-  { x: -260, y: 210, from: 'left' },
-  { x: 270, y: 240, from: 'right' },
+// Badge positions — percentage offsets from phone center, scaled to phone width
+const BADGE_LAYOUT = [
+  { side: 'left',  yPct: -0.38 },
+  { side: 'right', yPct: -0.30 },
+  { side: 'left',  yPct: -0.12 },
+  { side: 'right', yPct: -0.04 },
+  { side: 'left',  yPct: 0.12 },
+  { side: 'right', yPct: 0.20 },
+  { side: 'left',  yPct: 0.32 },
+  { side: 'right', yPct: 0.38 },
 ];
 
-function getPhoneCenter() {
+function getPhoneMetrics() {
   const pw = document.getElementById('phoneWrap');
-  if (!pw || !colLeft) return { x: 0, y: 0 };
+  if (!pw || !colLeft) return { cx: 0, cy: 0, w: 0, h: 0, colW: 0 };
   const pr = pw.getBoundingClientRect();
   const cr = colLeft.getBoundingClientRect();
   return {
-    x: (pr.left - cr.left) + pr.width / 2,
-    y: (pr.top - cr.top) + pr.height / 2,
+    cx: (pr.left - cr.left) + pr.width / 2,
+    cy: (pr.top - cr.top) + pr.height / 2,
+    w: pr.width,
+    h: pr.height,
+    colW: cr.width,
   };
 }
 
 function startDataStreams(labels) {
-  // Clear immediately, not with delay
   badgeTimers.forEach(t => clearTimeout(t));
   badgeTimers = [];
   if (badgeContainer) badgeContainer.innerHTML = '';
-  const pc = getPhoneCenter();
+  const pm = getPhoneMetrics();
+  // Gap between phone edge and badge — scales with available space
+  const gapX = Math.min((pm.colW / 2 - pm.w / 2) * 0.6, 280);
   labels.forEach((label, i) => {
-    const pos = BADGE_POSITIONS[i % BADGE_POSITIONS.length];
+    const layout = BADGE_LAYOUT[i % BADGE_LAYOUT.length];
     const badge = document.createElement('div');
     badge.className = 'source-badge';
     badge.innerHTML = `<span class="badge-dot"></span>${label}`;
-    // Position relative to phone center
-    badge.style.left = (pc.x + pos.x) + 'px';
-    badge.style.top = (pc.y + pos.y) + 'px';
-    badge.style.transform = 'translate(-50%, -50%)' + (pos.from === 'left' ? ' translateX(-40px)' : ' translateX(40px)');
+    // Position: left or right of phone, y offset proportional to phone height
+    const xOffset = layout.side === 'left' ? -pm.w / 2 - gapX : pm.w / 2 + gapX;
+    badge.style.left = (pm.cx + xOffset) + 'px';
+    badge.style.top = (pm.cy + layout.yPct * pm.h) + 'px';
+    const slideDir = layout.side === 'left' ? ' translateX(-40px)' : ' translateX(40px)';
+    badge.style.transform = 'translate(-50%, -50%)' + slideDir;
     badgeContainer.appendChild(badge);
-    // Stagger slide-in — 600ms apart, smooth entrance
     const t = setTimeout(() => {
       badge.classList.add('show');
       badge.style.transform = 'translate(-50%, -50%)';
