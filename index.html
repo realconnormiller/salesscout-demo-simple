@@ -935,7 +935,7 @@ const CONFIG = {
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
       readReceipt: true,
-      streamLabels: ['200+ data points', 'Fleet & authority records', 'Recall & compliance signals', 'Hiring velocity tracking', 'Carrier disruption mapping', 'Facility announcements', 'Contract & vendor signals', 'Nobody\u2019s called them yet'],
+      streamLabels: ['200+ data points', 'Accounts your competitors missed', 'Active buying signals', 'Hiring velocity tracking', 'Revenue at risk detected', 'Facility announcements', 'Timing windows scored', 'Nobody\u2019s called them yet'],
       progress: [
         'Researching Southeast shippers\u2026',
         'Scanning recent facility announcements and trigger events\u2026',
@@ -961,7 +961,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
-      streamLabels: ['Pattern matching', 'Expansion signals', 'Scoring prospects', 'Greenfield sites', 'Permit filings', 'Leadership changes', 'Supply chain pressure', 'Open decision windows'],
+      streamLabels: ['Pattern matching', 'Expansion signals', 'Pipeline-ready prospects', 'New market entrants', 'Pre-news intelligence', 'Leadership changes', 'Supply chain pressure', 'Open decision windows'],
       streamDuration: 10000,
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
@@ -1352,7 +1352,7 @@ async function playKnowMoment() {
   el.classList.add('show');
   await sleep(200);
   text.classList.add('show');
-  await sleep(2000);
+  await sleep(2500);
   el.classList.remove('show');
   text.classList.remove('show');
   await sleep(600);
@@ -1666,7 +1666,7 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  startDataStreams(['Ran while you slept', '4 matches found', 'First-mover advantage', 'Your reps close, not prospect', 'Decision urgency scored', 'Zero incumbent carriers', 'ICP match confirmed', 'Ready to pursue']);
+  startDataStreams(['Ran while you slept', '4 matches found', 'First-mover advantage', 'Reps sell, not research', 'Decision urgency scored', 'Zero incumbent carriers', 'Pipeline built overnight', 'Ready to pursue']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
