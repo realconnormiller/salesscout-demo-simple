@@ -550,31 +550,54 @@ body {
   to   { opacity: 1; transform: translateX(0); }
 }
 /* =============================================================
-   RESEARCH BADGES — inside phone screen only
+   DATA STREAMS — full canvas particle field + source badges
    ============================================================= */
-.research-badge {
+#dataCanvas {
   position: absolute;
-  padding: 6px 12px;
-  background: rgba(26, 111, 255, 0.15);
-  border: 1px solid rgba(26, 111, 255, 0.3);
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 1200ms ease;
+}
+#dataCanvas.active { opacity: 1; }
+
+/* Floating source badges */
+.source-badge {
+  position: absolute;
+  padding: 8px 16px;
+  background: rgba(26, 111, 255, 0.08);
+  border: 1px solid rgba(26, 111, 255, 0.2);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
-  color: #4db8ff;
+  color: rgba(77, 184, 255, 0.8);
   pointer-events: none;
-  z-index: 20;
+  z-index: 10;
   opacity: 0;
-  transition: opacity 400ms ease;
+  transform: scale(0.9);
+  transition: opacity 800ms ease, transform 800ms ease;
   white-space: nowrap;
+  box-shadow: 0 0 20px rgba(26, 111, 255, 0.1);
 }
-.research-badge.show { opacity: 1; }
-.research-badge .rb-dot {
+.source-badge.show {
+  opacity: 1;
+  transform: scale(1);
+}
+.source-badge .badge-dot {
   display: inline-block;
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #00c875;
+  background: #4db8ff;
   margin-right: 8px;
+  box-shadow: 0 0 8px rgba(77, 184, 255, 0.6);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(77, 184, 255, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(77, 184, 255, 0.8); }
 }
 
 /* Before/after contrast card */
@@ -751,6 +774,8 @@ body {
       <div class="bm-name">Sales<span class="bm-scout">Scout</span></div>
       <div class="bm-line"></div>
     </div>
+    <canvas id="dataCanvas" width="1920" height="1080"></canvas>
+    <div id="badgeContainer" style="position:absolute;inset:0;pointer-events:none;z-index:8;"></div>
     <div class="phone-wrap" id="phoneWrap">
       <div class="phone-glow"></div>
       <div class="phone">
@@ -917,6 +942,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
+      streamLabels: ['Pattern matching', 'Expansion signals', 'Open decision windows'],
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
         { text: '3 additional opportunities:' },
@@ -1220,49 +1246,182 @@ function addBubble(type, text, style, preloaded) {
 }
 
 // =============================================================
-// RESEARCH BADGES — inside phone screen only
+// DATA STREAMS — Canvas particle field + floating source badges
 // =============================================================
-const phoneScreen = document.querySelector('.screen');
-let badgeTimers = [];
+const dataCanvas = document.getElementById('dataCanvas');
+const ctx2d = dataCanvas.getContext('2d');
+const badgeContainer = document.getElementById('badgeContainer');
+let particles = [];
+let streamAnimFrame = null;
+let streamActive = false;
 
-const BADGE_CONFIG = [
-  { text: 'Facility announcements', top: '20%', left: '10%', showAt: 0, hideAt: 3000 },
-  { text: 'Hiring signals', top: '35%', right: '10%', showAt: 1000, hideAt: 4000 },
-  { text: 'Trigger events', top: '55%', left: '15%', showAt: 2000, hideAt: 5000 },
-  { text: 'Nobody\u2019s called them yet', top: '70%', right: '8%', showAt: 7000, hideAt: 10000 },
+// Phone center coordinates relative to col-left
+const phoneCenter = { x: 0, y: 0 };
+const colLeft = document.querySelector('.col-left');
+function updatePhoneCenter() {
+  const pw = document.getElementById('phoneWrap');
+  if (!pw || !colLeft) return;
+  const pr = pw.getBoundingClientRect();
+  const cr = colLeft.getBoundingClientRect();
+  phoneCenter.x = (pr.left - cr.left) + pr.width / 2;
+  phoneCenter.y = (pr.top - cr.top) + pr.height / 2;
+}
+
+// Resize canvas to col-left dimensions
+function resizeCanvas() {
+  if (!colLeft) return;
+  const cr = colLeft.getBoundingClientRect();
+  dataCanvas.width = cr.width;
+  dataCanvas.height = cr.height;
+  updatePhoneCenter();
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Particle class
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    // Start from random edge of screen
+    const side = Math.floor(Math.random() * 4);
+    const w = dataCanvas.width, h = dataCanvas.height;
+    if (side === 0) { this.x = -10; this.y = Math.random() * h; }
+    else if (side === 1) { this.x = w + 10; this.y = Math.random() * h; }
+    else if (side === 2) { this.x = Math.random() * w; this.y = -10; }
+    else { this.x = Math.random() * w; this.y = h + 10; }
+    this.size = 1 + Math.random() * 2;
+    this.speed = 0.8 + Math.random() * 1.5;
+    this.life = 0;
+    this.maxLife = 120 + Math.random() * 80;
+    this.alpha = 0;
+    // Calculate direction toward phone center with some spread
+    const dx = phoneCenter.x - this.x + (Math.random() - 0.5) * 200;
+    const dy = phoneCenter.y - this.y + (Math.random() - 0.5) * 200;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    this.vx = (dx / dist) * this.speed;
+    this.vy = (dy / dist) * this.speed;
+    // Trail
+    this.trail = [];
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life++;
+    // Fade in then fade out
+    const lifeRatio = this.life / this.maxLife;
+    if (lifeRatio < 0.1) this.alpha = lifeRatio * 10;
+    else if (lifeRatio > 0.7) this.alpha = (1 - lifeRatio) / 0.3;
+    else this.alpha = 1;
+    // Store trail
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 8) this.trail.shift();
+    if (this.life > this.maxLife) this.reset();
+  }
+  draw(c) {
+    // Draw trail
+    if (this.trail.length > 1) {
+      c.beginPath();
+      c.moveTo(this.trail[0].x, this.trail[0].y);
+      for (let i = 1; i < this.trail.length; i++) {
+        c.lineTo(this.trail[i].x, this.trail[i].y);
+      }
+      c.strokeStyle = `rgba(26, 111, 255, ${this.alpha * 0.15})`;
+      c.lineWidth = this.size * 0.5;
+      c.stroke();
+    }
+    // Draw particle
+    c.beginPath();
+    c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    c.fillStyle = `rgba(77, 184, 255, ${this.alpha * 0.6})`;
+    c.fill();
+    // Glow
+    c.beginPath();
+    c.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+    c.fillStyle = `rgba(26, 111, 255, ${this.alpha * 0.08})`;
+    c.fill();
+  }
+}
+
+// Connection lines from particles near phone center
+function drawConnectionLines(c) {
+  const threshold = 150;
+  for (const p of particles) {
+    const dx = p.x - phoneCenter.x;
+    const dy = p.y - phoneCenter.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < threshold && p.alpha > 0.3) {
+      const lineAlpha = (1 - dist / threshold) * p.alpha * 0.12;
+      c.beginPath();
+      c.moveTo(p.x, p.y);
+      c.lineTo(phoneCenter.x, phoneCenter.y);
+      c.strokeStyle = `rgba(26, 111, 255, ${lineAlpha})`;
+      c.lineWidth = 0.5;
+      c.stroke();
+    }
+  }
+}
+
+function animateParticles() {
+  ctx2d.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
+  if (!streamActive) return;
+  drawConnectionLines(ctx2d);
+  for (const p of particles) {
+    p.update();
+    p.draw(ctx2d);
+  }
+  streamAnimFrame = requestAnimationFrame(animateParticles);
+}
+
+// Source badge positions around phone
+const BADGE_POSITIONS = [
+  { x: -300, y: -220 }, // top-left
+  { x: 300, y: -180 },  // top-right
+  { x: -330, y: 10 },   // mid-left
+  { x: 330, y: 40 },    // mid-right
+  { x: -280, y: 200 },  // bottom-left
+  { x: 300, y: 220 },   // bottom-right
 ];
 
-function startDataStreams() {
-  if (!phoneScreen) return;
-  clearBadges();
-  BADGE_CONFIG.forEach(cfg => {
+function startDataStreams(labels) {
+  updatePhoneCenter();
+  // Create particles
+  particles = [];
+  for (let i = 0; i < 60; i++) {
+    particles.push(new Particle());
+  }
+  streamActive = true;
+  dataCanvas.classList.add('active');
+  animateParticles();
+
+  // Create floating source badges
+  badgeContainer.innerHTML = '';
+  labels.forEach((label, i) => {
+    const pos = BADGE_POSITIONS[i % BADGE_POSITIONS.length];
     const badge = document.createElement('div');
-    badge.className = 'research-badge';
-    badge.innerHTML = `<span class="rb-dot"></span>${cfg.text}`;
-    badge.style.top = cfg.top;
-    if (cfg.left) badge.style.left = cfg.left;
-    if (cfg.right) badge.style.right = cfg.right;
-    phoneScreen.appendChild(badge);
-    // Show
-    const showT = setTimeout(() => badge.classList.add('show'), cfg.showAt);
-    // Hide
-    const hideT = setTimeout(() => badge.classList.remove('show'), cfg.hideAt);
-    // Remove from DOM after fade
-    const removeT = setTimeout(() => { if (badge.parentNode) badge.parentNode.removeChild(badge); }, cfg.hideAt + 500);
-    badgeTimers.push(showT, hideT, removeT);
+    badge.className = 'source-badge';
+    badge.innerHTML = `<span class="badge-dot"></span>${label}`;
+    badge.style.left = (phoneCenter.x + pos.x) + 'px';
+    badge.style.top = (phoneCenter.y + pos.y) + 'px';
+    badge.style.transform = 'translate(-50%, -50%)';
+    badgeContainer.appendChild(badge);
+    // Stagger appearance
+    setTimeout(() => badge.classList.add('show'), 300 + i * 200);
   });
 }
 
 function stopDataStreams() {
-  clearBadges();
-}
-
-function clearBadges() {
-  badgeTimers.forEach(t => clearTimeout(t));
-  badgeTimers = [];
-  if (phoneScreen) {
-    phoneScreen.querySelectorAll('.research-badge').forEach(b => b.remove());
-  }
+  streamActive = false;
+  dataCanvas.classList.remove('active');
+  if (streamAnimFrame) { cancelAnimationFrame(streamAnimFrame); streamAnimFrame = null; }
+  // Fade out badges
+  badgeContainer.querySelectorAll('.source-badge').forEach(b => b.classList.remove('show'));
+  setTimeout(() => {
+    ctx2d.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
+    badgeContainer.innerHTML = '';
+    particles = [];
+  }, 600);
 }
 
 // "This is SalesScout" brand moment — triggered during VO1
@@ -1470,7 +1629,7 @@ async function playScene(scene) {
     await sleep(t.typingMin);
     removeTyping(typing);
     // Start data streams if scene has labels
-    if (scene.streamLabels) startDataStreams();
+    if (scene.streamLabels) startDataStreams(scene.streamLabels);
   }
   const progressEls = [];
   for (const p of scene.progress) {
@@ -1569,11 +1728,12 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  // No badges during 7AM — just bubbles
+  startDataStreams(['Ran while you slept', '4 open windows found', 'First-mover advantage']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
   }
+  stopDataStreams();
 
   await sleep(t.silenceAfterBriefs);
 
