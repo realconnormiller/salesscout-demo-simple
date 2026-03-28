@@ -1011,6 +1011,7 @@ const CONFIG = {
 // =============================================================
 const sounds = {
   send:    new Audio('audio/send.mp3'),
+  woosh:   new Audio('audio/woosh.mp3'),
   typing:  new Audio('audio/typing.mp3'),
   lock:    new Audio('audio/phone lock.mp3'),
   unlock:  new Audio('audio/phone unlock.mp3'),
@@ -1027,6 +1028,7 @@ const sounds = {
 // Volumes
 sounds.send.volume = 0.3;
 sounds.typing.volume = 0.2;
+sounds.woosh.volume = 0.5;
 sounds.lock.volume = 0.5;
 sounds.unlock.volume = 0.5;
 sounds.pursue.volume = 0.4;
@@ -1149,6 +1151,7 @@ function scheduleSFX() {
 
   // "This is SalesScout" brand moment
   // "We just know things you don't" → then "This is SalesScout"
+  scheduleSound('woosh', 18000);
   scheduleCallback(18000, () => playKnowMoment());
   scheduleCallback(20500, () => playBrandMoment());
 
