@@ -566,7 +566,7 @@ body {
   pointer-events: none;
   z-index: 10;
   opacity: 0;
-  transition: opacity 500ms ease, transform 500ms ease;
+  transition: opacity 700ms ease-out, transform 700ms ease-out;
   white-space: nowrap;
   box-shadow: 0 0 20px rgba(26, 111, 255, 0.1);
 }
@@ -1272,13 +1272,13 @@ function startDataStreams(labels) {
     // Position relative to phone center
     badge.style.left = (pc.x + pos.x) + 'px';
     badge.style.top = (pc.y + pos.y) + 'px';
-    badge.style.transform = 'translate(-50%, -50%)' + (pos.from === 'left' ? ' translateX(-20px)' : ' translateX(20px)');
+    badge.style.transform = 'translate(-50%, -50%)' + (pos.from === 'left' ? ' translateX(-40px)' : ' translateX(40px)');
     badgeContainer.appendChild(badge);
-    // Stagger slide-in from left/right
+    // Stagger slide-in — 600ms apart, smooth entrance
     const t = setTimeout(() => {
       badge.classList.add('show');
       badge.style.transform = 'translate(-50%, -50%)';
-    }, 200 + i * 250);
+    }, 500 + i * 600);
     badgeTimers.push(t);
   });
 }
@@ -1506,7 +1506,7 @@ async function playScene(scene) {
   }
   if (progressEls.length > 0 && scene.responses.length > 0) {
     // Let data streams linger — fade after a delay
-    if (scene.streamLabels) setTimeout(() => stopDataStreams(), 4000);
+    if (scene.streamLabels) setTimeout(() => stopDataStreams(), 12000);
     for (const el of progressEls) { el.classList.add('checked'); await sleep(t.checkmarkGap); }
     await sleep(t.checkmarkPause);
   }
