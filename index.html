@@ -1022,6 +1022,7 @@ const sounds = {
   pursue3: new Audio('audio/pursue.mp3'),
   pursue4: new Audio('audio/pursue.mp3'),
   pursue5: new Audio('audio/pursue.mp3'),
+  pursue6: new Audio('audio/pursue.mp3'),
   chime:   new Audio('audio/chime.mp3'),
   ambient: new Audio('audio/ambient.mp3'),
   vo1:     new Audio('audio/vo-clip1.wav'),
@@ -1042,6 +1043,7 @@ sounds.pursue2.volume = 0.4;
 sounds.pursue3.volume = 0.4;
 sounds.pursue4.volume = 0.4;
 sounds.pursue5.volume = 0.4;
+sounds.pursue6.volume = 0.4;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
 sounds.chime.volume = 0.35;
@@ -1458,7 +1460,7 @@ async function revealClosingCard() {
   playSound('pursue5');
   cta.classList.add('reveal');
   await sleep(200);
-  if (replay) replay.classList.add('reveal');
+  if (replay) { playSound('pursue6'); replay.classList.add('reveal'); }
 }
 
 // Before/after contrast card
