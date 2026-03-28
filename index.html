@@ -1151,7 +1151,7 @@ function scheduleSFX() {
 
   // "This is SalesScout" brand moment
   // "We just know things you don't" → then "This is SalesScout"
-  scheduleSound('woosh', 18000);
+  scheduleSound('woosh', 17900);
   scheduleCallback(18000, () => playKnowMoment());
   scheduleCallback(20500, () => playBrandMoment());
 
@@ -1651,7 +1651,7 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  startDataStreams(['Ran while you slept', '4 open windows found', 'First-mover advantage', 'Overnight research', 'Decision urgency scored', 'No broker has called', 'ICP match confirmed', 'Ready to pursue']);
+  startDataStreams(['Ran while you slept', '4 open windows found', 'First-mover advantage', 'Your reps close, not prospect', 'Decision urgency scored', 'No broker has called', 'ICP match confirmed', 'Ready to pursue']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
