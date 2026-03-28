@@ -1152,11 +1152,8 @@ function scheduleSFX() {
   // Ambient — ensure it's playing (may have started on page load)
   sounds.ambient.play().catch(() => {});
 
-  // "This is SalesScout" brand moment
-  // "We just know things you don't" → then "This is SalesScout"
-  scheduleSound('woosh', 17500);
+  // Animations — sounds fired inline by the functions themselves
   scheduleCallback(17600, () => playKnowMoment());
-  scheduleSound('reveal', 20100);
   scheduleCallback(20500, () => playBrandMoment());
 
   // VO clips
@@ -1351,6 +1348,7 @@ async function playKnowMoment() {
   const el = document.getElementById('knowMoment');
   if (!el) return;
   const text = el.querySelector('.km-text');
+  playSound('woosh');
   el.classList.add('show');
   await sleep(200);
   text.classList.add('show');
@@ -1363,6 +1361,7 @@ async function playKnowMoment() {
 async function playBrandMoment() {
   const el = document.getElementById('brandMoment');
   if (!el) return;
+  playSound('reveal');
   el.classList.add('show');
   const glow = el.querySelector('.bm-glow');
   const thisEl = el.querySelector('.bm-this');
@@ -1439,7 +1438,7 @@ async function revealClosingCard() {
   // Play vo5 in sync with "Stop prospecting" reveal
   playSound('vo5');
   line1.classList.add('reveal');
-  await sleep(1100);
+  await sleep(600);
   line2.classList.add('reveal');
   await sleep(600);
   sub.classList.add('reveal');
@@ -1575,7 +1574,7 @@ async function playScene(scene) {
   }
   if (progressEls.length > 0 && scene.responses.length > 0) {
     // Let data streams linger — fade after a delay
-    if (scene.streamLabels) setTimeout(() => stopDataStreams(), scene.streamDuration || 12000);
+    if (scene.streamLabels) setTimeout(() => stopDataStreams(), scene.streamDuration || 9000);
     for (const el of progressEls) { el.classList.add('checked'); await sleep(t.checkmarkGap); }
     await sleep(t.checkmarkPause);
   }
