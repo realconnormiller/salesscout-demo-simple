@@ -1019,6 +1019,9 @@ const sounds = {
   unlock:  new Audio('audio/phone unlock.mp3'),
   pursue:  new Audio('audio/pursue.mp3'),
   pursue2: new Audio('audio/pursue.mp3'),
+  pursue3: new Audio('audio/pursue.mp3'),
+  pursue4: new Audio('audio/pursue.mp3'),
+  pursue5: new Audio('audio/pursue.mp3'),
   chime:   new Audio('audio/chime.mp3'),
   ambient: new Audio('audio/ambient.mp3'),
   vo1:     new Audio('audio/vo-clip1.wav'),
@@ -1036,6 +1039,9 @@ sounds.lock.volume = 0.5;
 sounds.unlock.volume = 0.5;
 sounds.pursue.volume = 0.4;
 sounds.pursue2.volume = 0.4;
+sounds.pursue3.volume = 0.4;
+sounds.pursue4.volume = 0.4;
+sounds.pursue5.volume = 0.4;
 sounds.pursue2.preload = 'auto';
 sounds.pursue2.load();
 sounds.chime.volume = 0.35;
@@ -1443,13 +1449,13 @@ async function revealClosingCard() {
   playSound('woosh');
   line2.classList.add('reveal');
   await sleep(600);
-  playSound('pursue');
+  playSound('pursue3');
   sub.classList.add('reveal');
   await sleep(400);
-  playSound('pursue');
+  playSound('pursue4');
   logo.classList.add('reveal');
   await sleep(300);
-  playSound('pursue');
+  playSound('pursue5');
   cta.classList.add('reveal');
   await sleep(200);
   if (replay) replay.classList.add('reveal');
