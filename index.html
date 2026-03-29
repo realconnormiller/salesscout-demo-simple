@@ -1246,16 +1246,11 @@ window.addEventListener('resize', scalePhone);
 // Auto-scroll to bottom on page load
 requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
 
-// Intro auto-fade on page load — music starts, fades to demo after 3s
+// Intro auto-fade on page load
 setTimeout(() => {
-  // Try to start ambient (will fail silently if no user gesture yet)
-  sounds.ambient.play().catch(() => {});
-  // Fade out intro after 1.5 seconds
-  setTimeout(() => {
-    const overlay = document.getElementById('introOverlay');
-    if (overlay) overlay.classList.add('hidden');
-  }, 1500);
-}, 500);
+  const overlay = document.getElementById('introOverlay');
+  if (overlay) overlay.classList.add('hidden');
+}, 2000);
 
 // Rotating FOMO stats
 let statIdx = 0;
@@ -1298,17 +1293,26 @@ const badgeContainer = document.getElementById('badgeContainer');
 const colLeft = document.querySelector('.col-left');
 let badgeTimers = [];
 
-// Badge positions — fixed offsets from phone center (page scales uniformly)
-const BADGE_LAYOUT = [
-  { x: -300, y: -200, from: 'left' },
-  { x: 300, y: -150, from: 'right' },
-  { x: -330, y: -60, from: 'left' },
-  { x: 330, y: -10, from: 'right' },
-  { x: -300, y: 60, from: 'left' },
-  { x: 310, y: 110, from: 'right' },
-  { x: -280, y: 170, from: 'left' },
-  { x: 290, y: 200, from: 'right' },
-];
+// Badge positions — dynamically computed from phone metrics to guarantee no overlap
+function getBadgeLayout() {
+  const pw = document.getElementById('phoneWrap');
+  if (!pw) return [];
+  const pr = pw.getBoundingClientRect();
+  // Minimum X offset = half phone visual width + half badge width (~120px) + 30px gap
+  const minX = pr.width / 2 + 150;
+  const lx = -(minX + 40);  // left badges
+  const rx = minX + 40;     // right badges
+  return [
+    { x: lx - 30, y: -200, from: 'left' },
+    { x: rx + 30, y: -150, from: 'right' },
+    { x: lx,      y: -60,  from: 'left' },
+    { x: rx,      y: -10,  from: 'right' },
+    { x: lx - 20, y: 60,   from: 'left' },
+    { x: rx + 10, y: 110,  from: 'right' },
+    { x: lx + 10, y: 170,  from: 'left' },
+    { x: rx - 10, y: 200,  from: 'right' },
+  ];
+}
 
 function getPhoneMetrics() {
   const pw = document.getElementById('phoneWrap');
@@ -1331,7 +1335,8 @@ function startDataStreams(labels) {
   const pm = getPhoneMetrics();
   const colRect = colLeft.getBoundingClientRect();
   labels.forEach((label, i) => {
-    const pos = BADGE_LAYOUT[i % BADGE_LAYOUT.length];
+    const layout = getBadgeLayout();
+    const pos = layout[i % layout.length];
     const badge = document.createElement('div');
     badge.className = 'source-badge';
     badge.innerHTML = `<span class="badge-dot"></span>${label}`;
