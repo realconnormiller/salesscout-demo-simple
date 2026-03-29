@@ -934,7 +934,7 @@ const CONFIG = {
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
       readReceipt: true,
-      streamLabels: ['Untapped accounts surfaced', 'Accounts your competitors missed', 'Active buying signals', 'Timing advantages found', 'Competitive blind spots exposed', 'Open decision windows', 'First-call advantage', 'Nobody\u2019s called them yet'],
+      streamLabels: ['Prospects your team would never find', 'Companies making freight decisions right now', 'Your competitors don\u2019t have this', 'Personalized outreach in 4 seconds', 'Every claim sourced and verified', 'Zero cold calls wasted', 'Pipeline that builds itself', 'The account nobody else is calling'],
       progress: [
         'Researching Southeast shippers\u2026',
         'Scanning recent facility announcements and trigger events\u2026',
@@ -960,7 +960,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
-      streamLabels: ['Prospects no one is calling', 'Expansion signals detected', 'Pipeline-ready matches', 'Before-the-news timing', 'Vendor decisions in progress', 'Capacity gaps identified', 'First-mover opportunities', 'Decision urgency scored'],
+      streamLabels: ['3 more accounts found in 6 seconds', 'Scored and ranked by fit', 'Decision makers identified', 'Trigger events happening now', 'Your reps didn\u2019t lift a finger', 'Outbound ready on contact', 'Competitive intelligence included', 'One message to start pursuing'],
       streamDuration: 10000,
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
@@ -1694,7 +1694,7 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  startDataStreams(['Ran while you slept', '4 matches found', 'First-mover advantage', 'Reps sell, not research', 'Accounts no one has touched', 'Timing windows open now', 'Pipeline built overnight', 'Ready to pursue']);
+  startDataStreams(['This happened while you slept', '4 accounts ready to call', 'Your morning is already planned', 'Every rep starts with a full pipeline', 'No prospecting required', 'Research done, outreach drafted', 'First meeting is one message away', 'Your competitors woke up behind']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
