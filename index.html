@@ -934,7 +934,7 @@ const CONFIG = {
     {
       user: 'Find me Southeast food shippers most brokers aren\u2019t calling yet. Real freight complexity, active trigger events.',
       readReceipt: true,
-      streamLabels: ['200+ data points', 'Accounts your competitors missed', 'Active buying signals', 'Hiring velocity tracking', 'Revenue at risk detected', 'Facility announcements', 'Timing windows scored', 'Nobody\u2019s called them yet'],
+      streamLabels: ['Untapped accounts surfaced', 'Accounts your competitors missed', 'Active buying signals', 'Timing advantages found', 'Competitive blind spots exposed', 'Open decision windows', 'First-call advantage', 'Nobody\u2019s called them yet'],
       progress: [
         'Researching Southeast shippers\u2026',
         'Scanning recent facility announcements and trigger events\u2026',
@@ -960,7 +960,7 @@ const CONFIG = {
       user: 'find more companies like these opening new Southeast facilities in 2025-2026',
       readReceipt: false,
       responseGap: 800,
-      streamLabels: ['Pattern matching', 'Expansion signals', 'Pipeline-ready prospects', 'New market entrants', 'Pre-news intelligence', 'Leadership changes', 'Supply chain pressure', 'Open decision windows'],
+      streamLabels: ['Prospects no one is calling', 'Expansion signals detected', 'Pipeline-ready matches', 'Before-the-news timing', 'Vendor decisions in progress', 'Capacity gaps identified', 'First-mover opportunities', 'Decision urgency scored'],
       streamDuration: 10000,
       progress: [ 'Scanning facility announcements and hiring signals\u2026' ],
       responses: [
@@ -1500,10 +1500,10 @@ function showPipelineTease() {
   card.className = 'pipeline-tease';
   card.innerHTML = `
     <div class="tease-header">Coming soon</div>
-    <div class="tease-line"><span class="tease-label">Import records</span><span class="tease-desc">— see exactly who's shipping what, and with which carriers</span></div>
-    <div class="tease-line"><span class="tease-label">SEC filings</span><span class="tease-desc">— find transportation cost pressure before competitors do</span></div>
-    <div class="tease-line"><span class="tease-label">Building permits</span><span class="tease-desc">— spot facility expansions 6-12 months before the news</span></div>
-    <div class="tease-line"><span class="tease-label">Satellite monitoring</span><span class="tease-desc">— know when a site is active before they announce it</span></div>
+    <div class="tease-line"><span class="tease-label">Deeper intelligence</span><span class="tease-desc">— know who's shipping what before they tell you</span></div>
+    <div class="tease-line"><span class="tease-label">Financial pressure signals</span><span class="tease-desc">— find cost pain before competitors do</span></div>
+    <div class="tease-line"><span class="tease-label">Pre-announcement timing</span><span class="tease-desc">— spot expansion plans months before they hit the news</span></div>
+    <div class="tease-line"><span class="tease-label">Ground-truth verification</span><span class="tease-desc">— confirm activity before anyone announces it</span></div>
   `;
   msgBox.appendChild(card);
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1694,7 +1694,7 @@ async function playSevenAm() {
   await sleep(500);
   addTimestamp('Today 7:00 AM');
   await sleep(500);
-  startDataStreams(['Ran while you slept', '4 matches found', 'First-mover advantage', 'Reps sell, not research', 'Decision urgency scored', 'Zero incumbent carriers', 'Pipeline built overnight', 'Ready to pursue']);
+  startDataStreams(['Ran while you slept', '4 matches found', 'First-mover advantage', 'Reps sell, not research', 'Accounts no one has touched', 'Timing windows open now', 'Pipeline built overnight', 'Ready to pursue']);
   for (let i = 0; i < sa.bubbles.length; i++) {
     addBubble('assistant', sa.bubbles[i]);
     await sleep(i < 3 ? 1200 : t.sevenAmBubbleGap);
